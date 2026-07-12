@@ -1,0 +1,10 @@
+node_modules/
+venv/
+env/
+__pycache__/
+
+# File sensitif
+.env
+
+# File sistem
+.DS_Store
