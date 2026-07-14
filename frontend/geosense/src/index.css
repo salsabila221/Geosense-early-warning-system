@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* Deep Blue Waters */
+  --color-brand-dark: #16425B;
+  --color-brand-primary: #2F6690;
+  --color-brand-secondary: #3A7CA5;
+  --color-brand-light: #81C3D7;
+  --color-brand-bg: #D9DCD6;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* ========================= */
+/* React Leaflet */
+/* ========================= */
+
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
