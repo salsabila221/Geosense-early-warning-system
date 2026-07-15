@@ -1,66 +1,45 @@
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 
 export default function HeroSection() {
   return (
     <section className="mb-8">
-      <Card className="rounded-xl border border-brand-border bg-white shadow-sm">
-        <CardContent className="flex flex-col gap-8 p-8 lg:flex-row lg:items-center lg:justify-between">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 lg:p-8 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between border border-[#D9DCD6]/30">
+        
+        {/* LEFT TEXT */}
+        <div className="max-w-2xl">
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#16425B] sm:text-4xl leading-tight">
+            Sistem Peringatan Dini <br />
+            <span className="text-[#3A7CA5] font-semibold text-2xl sm:text-3xl">Pergeseran & Pergerakan Tanah</span>
+          </h2>
+          <p className="mt-4 text-sm sm:text-base leading-relaxed text-[#16425B]/70">
+            Pemantauan kondisi kestabilan tanah secara real-time berbasis jaringan sensor telemetri 
+            untuk mendeteksi potensi tanah longsor dan mendistribusikan peringatan dini secara cepat.
+          </p>
+        </div>
 
-          {/* LEFT */}
-          <div className="max-w-2xl">
-
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-brand-primary">
-              Geosense Monitoring Dashboard
-            </p>
-
-            <h2 className="text-3xl font-bold leading-tight text-brand-dark lg:text-4xl">
-              Early Warning System
-              <br />
-              for Landslide Monitoring
-            </h2>
-
-            <p className="mt-4 text-base leading-7 text-brand-secondary">
-              Sistem pemantauan kondisi tanah secara real-time berbasis sensor
-              LoRa untuk mendeteksi potensi pergeseran tanah dan memberikan
-              peringatan dini.
-            </p>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="w-full max-w-[300px] rounded-xl border border-[#B8DCC7] bg-[#ECF8F1] p-6">
-
-            <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-[#3D8B68]">
-              Status Sistem
-            </p>
-
-            <div className="mt-4 flex justify-center">
-              <Badge className="bg-[#3D8B68] px-6 py-1.5 text-sm text-white hover:bg-[#3D8B68]">
-                AMAN
+        {/* RIGHT STATUS - Ditonjolkan dengan border tebal dan efek Glow */}
+        <div className="w-full lg:max-w-xs rounded-xl bg-emerald-50/90 p-5 border-2 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.15)] flex flex-col justify-between min-h-[160px]">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-800">
+                Status Sistem
+              </span>
+              <Badge className="bg-emerald-600 px-4 py-1 text-xs font-bold text-white uppercase tracking-wider rounded-md shadow-md pointer-events-none">
+                Aman
               </Badge>
             </div>
-
-            <p className="mt-4 text-center text-sm leading-6 text-[#4E6E60]">
-              Seluruh node sensor beroperasi normal.
+            <p className="mt-3 text-xs font-medium leading-relaxed text-emerald-900/80">
+              Seluruh infrastruktur node sensor telemetri beroperasi normal tanpa anomali.
             </p>
-
-            <div className="my-5 border-t border-[#B8DCC7]" />
-
-            <div className="text-center">
-              <p className="text-[11px] uppercase tracking-[0.15em] text-[#5F8A74]">
-                Last Update
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-[#2E5E49]">
-                14 Juli 2026 • 12:40 WIB
-              </p>
-            </div>
-
           </div>
+          
+          <div className="mt-5 pt-4 border-t border-emerald-200 flex items-center justify-between text-[11px]">
+            <span className="font-bold uppercase tracking-wider text-emerald-800/60">Pembaruan Terakhir</span>
+            <span className="font-bold text-emerald-950">14 Juli 2026 • 12:40 WIB</span>
+          </div>
+        </div>
 
-        </CardContent>
-      </Card>
+      </div>
     </section>
   )
 }

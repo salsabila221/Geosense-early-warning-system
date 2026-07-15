@@ -9,35 +9,24 @@ import {
 } from "chart.js"
 import { Line } from "react-chartjs-2"
 import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend
-)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
 export default function VibrationChart() {
   const data = {
     labels: ["10:00", "10:05", "10:10", "10:15", "10:20", "10:25"],
     datasets: [
       {
-        label: "Frekuensi Getaran",
+        label: "Frekuensi Getaran (Hz)",
         data: [2.3, 2.8, 2.1, 3.4, 2.9, 2.5],
         borderColor: "#2F6690",
-        backgroundColor: "#81C3D7",
-        borderWidth: 2,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: "#2F6690",
+        backgroundColor: "rgba(129, 195, 215, 0.2)",
+        borderWidth: 2.5,
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: "#16425B",
+        pointBorderColor: "white",
+        pointBorderWidth: 1.5,
       },
     ],
   }
@@ -45,40 +34,40 @@ export default function VibrationChart() {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
+    plugins: { legend: { display: false } },
     scales: {
-      x: { grid: { display: false } },
-      y: {
-        beginAtZero: true,
-        grid: { color: "#E7EBEE" },
-        ticks: { stepSize: 1 },
+      x: { grid: { display: false }, ticks: { color: "#3A7CA5", font: { size: 11 } } },
+      y: { 
+        beginAtZero: true, 
+        grid: { color: "#EBF0F3" }, 
+        ticks: { color: "#3A7CA5", stepSize: 1, font: { size: 11 } } 
       },
     },
   }
 
   return (
-    <Card className="rounded-xl border border-brand-border bg-white shadow-sm">
-      <CardHeader className="flex h-20 flex-row items-center justify-between border-b border-brand-border">
+    <div className="rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#D9DCD6]/30 overflow-hidden flex flex-col h-full flex-1">
+      
+      <div className="flex h-20 items-center justify-between border-b border-[#D9DCD6]/40 px-6 bg-slate-50/50 flex-shrink-0">
         <div>
-          <CardTitle className="text-lg font-semibold text-brand-dark">
-            Grafik Getaran
-          </CardTitle>
-          <p className="mt-1 text-sm text-brand-secondary">
-            Data getaran real-time.
+          <h3 className="text-base font-bold text-[#16425B]">
+            Grafik Getaran Tanah
+          </h3>
+          <p className="text-xs text-[#3A7CA5] font-medium mt-0.5">
+            Analisis spektrum frekuensi 30 menit terakhir
           </p>
         </div>
-        <Badge className="bg-[#ECF8F1] text-[#3D8B68] hover:bg-[#ECF8F1]">
-          Real-time
+        <Badge className="bg-[#81C3D7]/20 text-[#2F6690] border border-[#81C3D7]/40 shadow-none px-2.5 py-0.5 animate-pulse">
+          Realtime
         </Badge>
-      </CardHeader>
+      </div>
 
-      <CardContent className="h-[360px] p-5">
-        <Line data={data} options={options} />
-      </CardContent>
-    </Card>
+      <div className="p-5 flex-1 min-h-[380px]">
+        <div className="h-full w-full">
+          <Line data={data} options={options} />
+        </div>
+      </div>
+
+    </div>
   )
 }
