@@ -34,7 +34,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-bg">
+    <div className="min-h-screen bg-[#F4F6F8] font-sans text-[#16425B] antialiased selection:bg-[#81C3D7]/30">
       
       <Header 
         isLoggedIn={isLoggedIn} 
@@ -43,19 +43,19 @@ export default function App() {
         onLogout={handleLogout} 
       />
 
-      <main className="mx-auto max-w-7xl px-6 pt-36 pb-10">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 pt-36 pb-12">
         <HeroSection />
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-12">
+        {/* items-stretch memaksa semua col-span di dalamnya memiliki tinggi bawah yang sama rata */}
+        <section className="mt-8 grid gap-6 lg:grid-cols-12 items-stretch">
           
-          {/* DI SINI PERBAIKANNYA: Wajib oper data isAdmin ke LiveMap */}
-          <div className={isAdmin ? "lg:col-span-7" : "lg:col-span-12"}>
+          <div className={isAdmin ? "lg:col-span-7 flex flex-col" : "lg:col-span-12 flex flex-col"}>
             <LiveMap isAdmin={isAdmin} />
           </div>
 
-          {/* Grafik getaran otomatis muncul berdampingan saat login Admin sukses */}
+          {/* Grafik HANYA muncul jika login sebagai Admin */}
           {isAdmin && (
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 flex flex-col">
               <VibrationChart />
             </div>
           )}
