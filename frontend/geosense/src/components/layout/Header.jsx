@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
-export default function Header({ isLoggedIn, isAdmin, onNavigate, onLogout }) {
+// UPDATE: Menambahkan 'userName' ke dalam props yang diterima Header
+export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLogout }) {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -29,6 +30,10 @@ export default function Header({ isLoggedIn, isAdmin, onNavigate, onLogout }) {
     if (hour >= 15 && hour < 18) return "Selamat Sore"
     return "Selamat Malam"
   }
+
+  // UPDATE LOGIK: Memotong nama depan. Jika userName belum siap/kosong (misal login manual), 
+  // sistem akan otomatis menggunakan fallback kata "Admin" atau "User" berdasarkan role-nya.
+  const firstName = userName ? userName.split(" ")[0] : (isAdmin ? "Admin" : "User")
 
   return (
     <div className="fixed inset-x-0 top-0 z-[9999]">
@@ -62,7 +67,7 @@ export default function Header({ isLoggedIn, isAdmin, onNavigate, onLogout }) {
             {isLoggedIn ? (
               <>
                 <span className="text-sm font-medium text-[#16425B]">
-                  {getGreeting()}, <span className="font-bold text-[#2F6690]">{isAdmin ? "Admin" : "User"}</span>
+                  {getGreeting()}, <span className="font-bold text-[#2F6690]">{firstName}</span>
                 </span>
                 <Button 
                   onClick={onLogout}
