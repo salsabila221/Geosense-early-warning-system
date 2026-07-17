@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react" // 1. Tambahkan useEffect untuk listen data live
 import Header from "@/components/layout/Header"
 import HeroSection from "@/components/dashboard/HeroSection"
 import LiveMap from "@/components/dashboard/LiveMap"
@@ -12,8 +12,15 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentPage, setCurrentPage] = useState("dashboard")
   
+  // State baru untuk menampung nama user yang berhasil login
+  const [userName, setUserName] = useState("")
+  
   const [systemStatus, setSystemStatus] = useState("Aman")
-  const [lastUpdated, setLastUpdated] = useState("14 Juli 2026 • 12:40 WIB")
+  const [lastUpdated, setLastUpdated] = useState("Menghubungkan ke server...")
+  
+  // State baru untuk menampung history grafik dari backend
+  const [chartData, setChartData] = useState([0, 0, 0, 0, 0, 0])
+  const [liveVibration, setLiveVibration] = useState(0.0)
   
   // State manajemen pop-up konfirmasi (Custom Modal)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -24,6 +31,39 @@ export default function App() {
     { id: 2, name: "Rian Aditya", email: "rian@email.com", telegram: "@rian_adit" },
   ])
 
+  // ================= PIPELINE WEBSOCKET (LIVE DATA FROM BACKEND) =================
+  useEffect(() => {
+    // Membuka pipa komunikasi real-time ke FastAPI
+    const socket = new WebSocket("ws://localhost:8000/ws/telemetry")
+
+    socket.onmessage = (event) => {
+      try {
+        const dataFromServer = JSON.parse(event.data)
+        
+        // Terima beres data matang hasil olahan script temanmu via backend
+        setSystemStatus(dataFromServer.status)
+        setLastUpdated(dataFromServer.lastUpdated)
+        
+        if (dataFromServer.chartData) {
+          setChartData(dataFromServer.chartData)
+        }
+        if (dataFromServer.vibration !== undefined) {
+          setLiveVibration(dataFromServer.vibration)
+        }
+      } catch (error) {
+        console.error("Gagal membaca payload data:", error)
+      }
+    }
+
+    socket.onerror = (error) => {
+      console.error("Koneksi backend error:", error)
+      setLastUpdated("Server Offline")
+    }
+
+    // Bersihkan pipa koneksi jika page di-close / reload
+    return () => socket.close()
+  }, [])
+
   const handleStatusClick = (targetStatus) => {
     if (targetStatus === "Aman") {
       executeStatusUpdate("Aman")
@@ -33,32 +73,54 @@ export default function App() {
     }
   }
 
-  const executeStatusUpdate = (status) => {
-    // 1. Paksa tutup pop-up di baris pertama agar langsung hilang dari layar
+  // ================= SINKRONISASI API OVERRIDE KE BACKEND =================
+  const executeStatusUpdate = async (status) => {
+    // 1. Paksa tutup pop-up di baris pertama agar langsung hilang dari layar (Snappy!)
     setIsConfirmOpen(false)
     
-    // 2. Baru perbarui status sistem
-    setSystemStatus(status)
-    
-    // 3. Catat waktu pembaruan teranyar
+    // Format waktu lokal untuk dikirim ke backend
     const now = new Date()
     const timeString = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-    const dateString = now.toLocaleDateString("id-ID", { day: "numeric", month: "Short", year: "numeric" })
-    setLastUpdated(`${dateString} • ${timeString} WIB`)
+    const dateString = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    const formattedTime = `${dateString} • ${timeString} WIB`
+
+    // Optimistic UI update (biar front-end terasa instan berubah duluan)
+    setSystemStatus(status)
+    setLastUpdated(`Dipaksa Admin • ${timeString} WIB`)
+    
+    try {
+      // Tembak API backend Python agar status terkunci dan memicu bot Telegram
+      await fetch("http://localhost:8000/api/override", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: status,
+          lastUpdated: formattedTime
+        }),
+      })
+    } catch (err) {
+      console.error("Gagal mengirim perintah override ke backend:", err)
+    }
   }
 
-  const handleLoginSuccess = (roleIsAdmin) => {
+  // UPDATE: Fungsi login sukses sekarang menangkap parameter name dari AuthPage
+  const handleLoginSuccess = (roleIsAdmin, name) => {
     setIsAdmin(roleIsAdmin)
+    setUserName(name || "User") // Simpan nama ke state, default ke "User" jika kosong
     setIsLoggedIn(true)
     setCurrentPage("dashboard")
   }
 
+  // UPDATE: Fungsi logout ikut menghapus data nama dari state
   const handleLogout = () => {
     setIsAdmin(false)
     setIsLoggedIn(false)
+    setUserName("") // Hapus nama saat keluar
     setCurrentPage("dashboard")
-    setSystemStatus("Aman")
-    setLastUpdated("14 Juli 2026 • 12:40 WIB")
+    // Kembalikan kendali ke otomatis sensor saat admin logout
+    executeStatusUpdate("Aman") 
   }
 
   if (currentPage === "login" || currentPage === "signup") {
@@ -74,9 +136,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F6F8] font-sans text-[#16425B] antialiased selection:bg-[#81C3D7]/30">
       
+      {/* UPDATE: Alirkan state userName ke dalam props komponen Header */}
       <Header 
         isLoggedIn={isLoggedIn} 
         isAdmin={isAdmin} 
+        userName={userName}
         onNavigate={setCurrentPage} 
         onLogout={handleLogout} 
       />
@@ -142,7 +206,8 @@ export default function App() {
 
           {isLoggedIn && isAdmin && (
             <div className="lg:col-span-5 flex flex-col">
-              <VibrationChart />
+              {/* Salurkan data chart live dan getaran riil ke komponen Grafik */}
+              <VibrationChart chartData={chartData} vibration={liveVibration} />
             </div>
           )}
         </section>
@@ -184,13 +249,11 @@ export default function App() {
       {/* ================= CUSTOM MODAL POP-UP KONFIRMASI (MURNI TAILWIND) ================= */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop gelap blur latar belakang */}
           <div 
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setIsConfirmOpen(false)}
           />
           
-          {/* Konten Box Dialog */}
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-[#D9DCD6]/40 transform transition-all animate-in fade-in-50 zoom-in-95 duration-150">
             <div className="flex flex-col">
               <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
