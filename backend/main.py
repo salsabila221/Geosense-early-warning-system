@@ -1,116 +1,94 @@
+import paho.mqtt.client as mqtt
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
-# Import dari file buatan kita sendiri (Modular!)
 import models
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 
-# Perintah untuk otomatis membuat file database & tabel jika belum ada
+# --- SETUP DATABASE ---
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+# --- FUNGSI MQTT (BACKGROUND) ---
+def update_status_in_db(new_status):
+    db = SessionLocal()
+    status_entry = db.query(models.SystemStatus).filter(models.SystemStatus.id == 1).first()
+    if not status_entry:
+        status_entry = models.SystemStatus(id=1, status=new_status)
+        db.add(status_entry)
+    else:
+        status_entry.status = new_status
+    db.commit()
+    db.close()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def on_message(client, userdata, msg):
+    payload = msg.payload.decode()
+    update_status_in_db(payload)
+
+mqtt_client = mqtt.Client()
+mqtt_client.on_message = on_message
+mqtt_client.connect("broker.hivemq.com", 1883, 60)
+mqtt_client.subscribe("geosense/status")
+mqtt_client.loop_start()
+
+# --- APP SETUP ---
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 GOOGLE_CLIENT_ID = "154325619553-16skq2jomkno70n87nnkpptkgipakq9f.apps.googleusercontent.com"
 
+# --- ENDPOINTS ---
 class GoogleAuthRequest(BaseModel):
     token: str
 
 @app.post("/api/auth/google")
 async def auth_google(data: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
-        # 1. Validasi token Google
-        id_info = id_token.verify_oauth2_token(
-            data.token, 
-            google_requests.Request(), 
-            GOOGLE_CLIENT_ID
-        )
-        
+        id_info = id_token.verify_oauth2_token(data.token, google_requests.Request(), GOOGLE_CLIENT_ID)
         email_user = id_info.get("email")
         nama_user = id_info.get("name")
         
-        # 2. Cari user di database pakai SQLAlchemy ORM
         user_in_db = db.query(models.User).filter(models.User.email == email_user).first()
         
-        # ================================================================
-        # 📌 MAPPING 3 ADMIN BEDA DENGAN TELEGRAM MASING-MASING
-        # Silakan ganti email & username telegram temanmu di bawah ini ya!
-        # ================================================================
         ADMIN_MAPS = {
-            "salsabilawiryawan7@gmail.com": "@chocomunn",  # Admin 1 (Kamu)
-            "s4yed.sult4n@gmail.com": "@username_tele_1",  # Admin 2 (Teman 1)
-            "reyhanfachrurozzi7@gmail.com": "@ryhnfch"   # Admin 3 (Teman 2)
+            "salsabilawiryawan7@gmail.com": "@chocomunn",
+            "s4yed.sult4n@gmail.com": "@username_tele_1",
+            "reyhanfachrurozzi7@gmail.com": "@ryhnfch"
         }
-        # ================================================================
         
-        # 3. Jalur Otomatis Admin: Jika belum ada di DB dan emailnya terdaftar di ADMIN_MAPS
         if not user_in_db and email_user in ADMIN_MAPS:
-            # Mengambil username telegram yang berpasangan pas dengan email loginnya
-            telegram_handle = ADMIN_MAPS[email_user]
-            
-            user_in_db = models.User(
-                email=email_user,
-                fullname=nama_user,       # Otomatis ditarik dari nama Google mereka
-                telegram=telegram_handle, # Unik sesuai pemilik email di atas
-                role="admin"
-            )
+            user_in_db = models.User(email=email_user, fullname=nama_user, telegram=ADMIN_MAPS[email_user], role="admin")
             db.add(user_in_db)
             db.commit()
             db.refresh(user_in_db)
         
-        # 4. Ambil keputusan untuk React frontend
-        if user_in_db:
-            return {
-                "is_new_user": False,
-                "is_admin": True if user_in_db.role == "admin" else False,
-                "email": user_in_db.email,
-                "name": user_in_db.fullname
-            }
-        else:
-            # Jika orang lain login (bukan admin), dilempar ke form pendaftaran user biasa
-            return {
-                "is_new_user": True,
-                "is_admin": False,
-                "email": email_user,
-                "name": nama_user
-            }
-            
+        return {
+            "is_new_user": user_in_db is None,
+            "is_admin": user_in_db.role == "admin" if user_in_db else False,
+            "email": email_user,
+            "name": nama_user
+        }
     except ValueError:
-        return {"success": False, "error": "Token Google tidak valid!"}
-    
-# Model data kiriman dari form onboarding React
+        return {"success": False, "error": "Invalid token"}
+
+@app.get("/api/status")
+async def get_status(db: Session = Depends(get_db)):
+    status_entry = db.query(models.SystemStatus).filter(models.SystemStatus.id == 1).first()
+    return {
+        "status": status_entry.status if status_entry else "Normal",
+        "lastUpdated": status_entry.last_updated.strftime("%Y-%m-%d %H:%M:%S") if status_entry else "N/A"
+    }
+
 class UserRegisterRequest(BaseModel):
     email: str
     fullname: str
     telegram: str
 
 @app.post("/api/auth/google/register")
-async def register_google_user(data: UserRegisterRequest, db: Session = Depends(get_db)):
-    # Cek sekali lagi apakah user sudah terdaftar
-    user_exists = db.query(models.User).filter(models.User.email == data.email).first()
-    if user_exists:
-        return {"success": False, "message": "User sudah terdaftar!"}
-    
-    # Simpan warga baru + Telegramnya ke SQLite
-    new_user = models.User(
-        email=data.email,
-        fullname=data.fullname,
-        telegram=data.telegram,
-        role="user" # Otomatis jadi user biasa
-    )
+async def register_user(data: UserRegisterRequest, db: Session = Depends(get_db)):
+    new_user = models.User(email=data.email, fullname=data.fullname, telegram=data.telegram, role="user")
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)
-    
-    return {"success": True, "message": "Warga baru berhasil disimpan ke database!"}
+    return {"success": True}
