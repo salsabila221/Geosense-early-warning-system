@@ -89,16 +89,12 @@ export default function App() {
     setLastUpdated(`Dipaksa Admin • ${timeString} WIB`)
     
     try {
-      // Tembak API backend Python agar status terkunci dan memicu bot Telegram
-      await fetch("http://localhost:8000/api/override", {
+      // Tembak API backend Python dengan URL endpoint /api/admin/override yang baru
+      await fetch(`http://localhost:8000/api/admin/override?status=${status}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          status: status,
-          lastUpdated: formattedTime
-        }),
       })
     } catch (err) {
       console.error("Gagal mengirim perintah override ke backend:", err)
