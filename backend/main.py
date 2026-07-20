@@ -1,3 +1,5 @@
+import ssl
+import json
 import paho.mqtt.client as mqtt
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +12,9 @@ from database import engine, get_db, SessionLocal
 
 # --- SETUP DATABASE ---
 models.Base.metadata.create_all(bind=engine)
+
+# --- FLAG KONTROL OVERRIDE ---
+IS_OVERRIDDEN = False  # False = Otomatis dari Streamer, True = Dikunci Admin
 
 # --- FUNGSI MQTT (BACKGROUND) ---
 def update_status_in_db(new_status):
@@ -24,18 +29,62 @@ def update_status_in_db(new_status):
     db.close()
 
 def on_message(client, userdata, msg):
-    payload = msg.payload.decode()
-    update_status_in_db(payload)
+    global IS_OVERRIDDEN
+    
+    # Jika Admin sedang override manual, abaikan data otomatis dari streamer CSV
+    if IS_OVERRIDDEN:
+        print("[MQTT] Data streamer diterima, tapi diabaikan karena ADMIN OVERRIDE aktif.")
+        return
+
+    try:
+        # Dekode JSON dari streamer
+        payload = json.loads(msg.payload.decode())
+        raw_status = payload.get("status", "AMAN")
+        
+        # Mapping status ke format Tampilan Web
+        if raw_status in ["BAHAYA", "Warning"]:
+            mapped_status = "Warning"
+        elif raw_status in ["SIAGA", "Siaga"]:
+            mapped_status = "Siaga"
+        else:
+            mapped_status = "Aman"
+            
+        update_status_in_db(mapped_status)
+        print(f"[MQTT] Status otomatis diperbarui: {mapped_status}")
+    except Exception as e:
+        print(f"[MQTT ERROR] Gagal dekode payload: {e}")
+
+# --- KONEKSI HIVEMQ CLOUD ---
+MQTT_BROKER = "130e9cfdf74f4c538f0dc340a76fac23.s1.eu.hivemq.cloud"
+MQTT_PORT = 8883
+
+# ⬇️ ISI DENGAN USERNAME & PASSWORD DARI ACCESS MANAGEMENT ⬇️
+MQTT_USER = "gemastik"
+MQTT_PASSWORD = "12345678"
 
 mqtt_client = mqtt.Client()
+mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+mqtt_client.tls_set(cert_reqs=ssl.CERT_NONE)
+mqtt_client.tls_insecure_set(True)
 mqtt_client.on_message = on_message
-mqtt_client.connect("broker.hivemq.com", 1883, 60)
-mqtt_client.subscribe("geosense/status")
-mqtt_client.loop_start()
+
+try:
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    mqtt_client.subscribe("sensor/gemastik/data")  # Samakan topik dengan streamer
+    mqtt_client.loop_start()
+    print("[MQTT] Berhasil terhubung ke HiveMQ Cloud!")
+except Exception as e:
+    print(f"[MQTT ERROR] Gagal konek ke HiveMQ Cloud: {e}")
 
 # --- APP SETUP ---
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=["*"], 
+    allow_credentials=True, 
+    allow_methods=["*"], 
+    allow_headers=["*"]
+)
 
 GOOGLE_CLIENT_ID = "154325619553-16skq2jomkno70n87nnkpptkgipakq9f.apps.googleusercontent.com"
 
@@ -80,6 +129,39 @@ async def get_status(db: Session = Depends(get_db)):
         "status": status_entry.status if status_entry else "Normal",
         "lastUpdated": status_entry.last_updated.strftime("%Y-%m-%d %H:%M:%S") if status_entry else "N/A"
     }
+
+@app.post("/api/admin/override")
+async def override_status(status: str, db: Session = Depends(get_db)):
+    """Endpoint khusus Admin untuk mengunci & memaksa ubah status EWS"""
+    global IS_OVERRIDDEN
+    IS_OVERRIDDEN = True  # Kunci agar streamer otomatis diabaikan
+    
+    status_entry = db.query(models.SystemStatus).filter(models.SystemStatus.id == 1).first()
+    if not status_entry:
+        status_entry = models.SystemStatus(id=1, status=status)
+        db.add(status_entry)
+    else:
+        status_entry.status = status
+    db.commit()
+
+    # Kirim balik perintah override ke MQTT Broker untuk Hardware
+    command_payload = json.dumps({
+        "override_active": True,
+        "forced_status": status
+    })
+    mqtt_client.publish("sensor/gemastik/command", command_payload)
+
+    return {
+        "success": True, 
+        "message": f"Status berhasil di-override menjadi {status} dan dikirim ke hardware."
+    }
+
+@app.post("/api/admin/reset-override")
+async def reset_override():
+    """Endpoint untuk melepas kuncian Admin dan kembali ke mode otomatis"""
+    global IS_OVERRIDDEN
+    IS_OVERRIDDEN = False
+    return {"success": True, "message": "Sistem kembali ke pemantauan otomatis streamer MQTT."}
 
 class UserRegisterRequest(BaseModel):
     email: str
