@@ -8,3 +8,15 @@ __pycache__/
 
 # File sistem
 .DS_Store
+
+# Database SQLite (tidak perlu di-push)
+*.db
+
+# Model ML (file besar, di-generate lokal)
+backend/model_geosense.pkl
+
+# Data CSV besar (di-generate lokal dengan dataset_longsor.py)
+backend/dataset_longsor.csv
+
+# File duplikat
+backend/longsor_data.db

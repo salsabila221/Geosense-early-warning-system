@@ -1,0 +1,40 @@
+{
+  "model_type": "RandomForestClassifier",
+  "features": [
+    "node1_mms",
+    "node2_mms",
+    "node3_mms",
+    "node1_hum",
+    "node2_hum",
+    "node3_hum",
+    "tdoa_12_ms",
+    "tdoa_13_ms",
+    "r_meter",
+    "theta_deg",
+    "max_mms",
+    "avg_hum"
+  ],
+  "labels": [
+    "AMAN",
+    "SIAGA",
+    "BAHAYA"
+  ],
+  "accuracy_test": 0.9965277777777778,
+  "cv_mean": 0.9948611111111111,
+  "cv_std": 0.000708197154665662,
+  "feature_importance": {
+    "max_mms": 0.19568277308598672,
+    "avg_hum": 0.17322602783819546,
+    "node3_mms": 0.1369524612401596,
+    "node2_hum": 0.13125671158721675,
+    "node1_mms": 0.12299017579688602,
+    "node3_hum": 0.08415453501268469,
+    "node2_mms": 0.06928966757540111,
+    "node1_hum": 0.06740617317827818,
+    "r_meter": 0.0178516015861763,
+    "tdoa_12_ms": 0.00048621326569108506,
+    "theta_deg": 0.00035705295622770044,
+    "tdoa_13_ms": 0.00034660687709636175
+  },
+  "training_time_sec": 0.48
+}
