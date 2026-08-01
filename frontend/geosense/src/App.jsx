@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react" // 1. Tambahkan useEffect untuk listen data live
+import { useState, useEffect } from "react"
+import { io } from "socket.io-client" // Import Socket.IO Client
 import Header from "@/components/layout/Header"
 import HeroSection from "@/components/dashboard/HeroSection"
 import LiveMap from "@/components/dashboard/LiveMap"
@@ -12,17 +13,17 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentPage, setCurrentPage] = useState("dashboard")
   
-  // State baru untuk menampung nama user yang berhasil login
   const [userName, setUserName] = useState("")
   
   const [systemStatus, setSystemStatus] = useState("Aman")
   const [lastUpdated, setLastUpdated] = useState("Menghubungkan ke server...")
   
-  // State baru untuk menampung history grafik dari backend
-  const [chartData, setChartData] = useState([0, 0, 0, 0, 0, 0])
+  // State data grafik & getaran real-time
+  const [chartData, setChartData] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
   const [liveVibration, setLiveVibration] = useState(0.0)
+  const [mlActivity, setMlActivity] = useState("-")
   
-  // State manajemen pop-up konfirmasi (Custom Modal)
+  // Custom Modal State
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [pendingStatus, setPendingStatus] = useState("")
 
@@ -31,37 +32,65 @@ export default function App() {
     { id: 2, name: "Rian Aditya", email: "rian@email.com", telegram: "@rian_adit" },
   ])
 
-  // ================= PIPELINE WEBSOCKET (LIVE DATA FROM BACKEND) =================
+  // ================= PIPELINE SOCKET.IO (LIVE DATA FROM BACKEND NODE.JS) =================
   useEffect(() => {
-    // Membuka pipa komunikasi real-time ke FastAPI
-    const socket = new WebSocket("ws://localhost:8000/ws/telemetry")
+    // Hubungkan ke Backend Node.js Port 5000
+    const socket = io("http://localhost:5000")
 
-    socket.onmessage = (event) => {
+    socket.on("connect", () => {
+      console.log("⚡ Terhubung ke Backend GeoSense via Socket.IO")
+      setLastUpdated("Terhubung ke Server")
+    })
+
+    socket.on("geosense_update", (dataFromServer) => {
       try {
-        const dataFromServer = JSON.parse(event.data)
-        
-        // Terima beres data matang hasil olahan script temanmu via backend
-        setSystemStatus(dataFromServer.status)
-        setLastUpdated(dataFromServer.lastUpdated)
-        
-        if (dataFromServer.chartData) {
-          setChartData(dataFromServer.chartData)
+        // 1. Update Status Kebencanaan (Aman / Siaga / Warning)
+        if (dataFromServer.status) {
+          const rawStatus = dataFromServer.status.toUpperCase()
+          let displayStatus = "Aman"
+          if (rawStatus === "SIAGA") displayStatus = "Siaga"
+          if (rawStatus === "WASPADA" || rawStatus === "WARNING") displayStatus = "Warning"
+          
+          setSystemStatus(displayStatus)
         }
-        if (dataFromServer.vibration !== undefined) {
-          setLiveVibration(dataFromServer.vibration)
+
+        // 2. Format Timestamp Update
+        const dateObj = dataFromServer.timestamp 
+          ? new Date(dataFromServer.timestamp * 1000) 
+          : new Date()
+        const timeStr = dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+        setLastUpdated(`Live (${dataFromServer.kondisi_tanah || 'Sensor'}) • ${timeStr} WIB`)
+
+        // 3. Update Nilai Getaran (Amplitudo Peak-to-Peak) & Streaming Chart Data
+        if (dataFromServer.p2p_amplitude !== undefined) {
+          const ampVal = parseFloat(dataFromServer.p2p_amplitude)
+          setLiveVibration(ampVal)
+
+          // Masukkan data baru ke antrean grafik (Simpan 10 data terakhir)
+          setChartData((prevData) => {
+            const updated = [...prevData, ampVal]
+            return updated.slice(-10)
+          })
         }
+
+        // 4. Update Aktivitas ML
+        if (dataFromServer.aktivitas) {
+          setMlActivity(dataFromServer.aktivitas.toUpperCase())
+        }
+
       } catch (error) {
         console.error("Gagal membaca payload data:", error)
       }
-    }
+    })
 
-    socket.onerror = (error) => {
-      console.error("Koneksi backend error:", error)
+    socket.on("disconnect", () => {
+      console.warn("⚠️ Koneksi ke server terputus")
       setLastUpdated("Server Offline")
-    }
+    })
 
-    // Bersihkan pipa koneksi jika page di-close / reload
-    return () => socket.close()
+    return () => {
+      socket.disconnect()
+    }
   }, [])
 
   const handleStatusClick = (targetStatus) => {
@@ -75,22 +104,18 @@ export default function App() {
 
   // ================= SINKRONISASI API OVERRIDE KE BACKEND =================
   const executeStatusUpdate = async (status) => {
-    // 1. Paksa tutup pop-up di baris pertama agar langsung hilang dari layar (Snappy!)
     setIsConfirmOpen(false)
     
-    // Format waktu lokal untuk dikirim ke backend
     const now = new Date()
     const timeString = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-    const dateString = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
-    const formattedTime = `${dateString} • ${timeString} WIB`
-
-    // Optimistic UI update (biar front-end terasa instan berubah duluan)
+    
+    // Optimistic UI update
     setSystemStatus(status)
     setLastUpdated(`Dipaksa Admin • ${timeString} WIB`)
     
     try {
-      // Tembak API backend Python dengan URL endpoint /api/admin/override yang baru
-      await fetch(`http://localhost:8000/api/admin/override?status=${status}`, {
+      // Tembak API Backend Node.js Port 5000
+      await fetch(`http://localhost:5000/api/admin/override?status=${status}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,21 +126,18 @@ export default function App() {
     }
   }
 
-  // UPDATE: Fungsi login sukses sekarang menangkap parameter name dari AuthPage
   const handleLoginSuccess = (roleIsAdmin, name) => {
     setIsAdmin(roleIsAdmin)
-    setUserName(name || "User") // Simpan nama ke state, default ke "User" jika kosong
+    setUserName(name || "User")
     setIsLoggedIn(true)
     setCurrentPage("dashboard")
   }
 
-  // UPDATE: Fungsi logout ikut menghapus data nama dari state
   const handleLogout = () => {
     setIsAdmin(false)
     setIsLoggedIn(false)
-    setUserName("") // Hapus nama saat keluar
+    setUserName("")
     setCurrentPage("dashboard")
-    // Kembalikan kendali ke otomatis sensor saat admin logout
     executeStatusUpdate("Aman") 
   }
 
@@ -132,7 +154,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F4F6F8] font-sans text-[#16425B] antialiased selection:bg-[#81C3D7]/30">
       
-      {/* UPDATE: Alirkan state userName ke dalam props komponen Header */}
       <Header 
         isLoggedIn={isLoggedIn} 
         isAdmin={isAdmin} 
@@ -153,7 +174,7 @@ export default function App() {
                 Admin Control: Emergency Override
               </h4>
               <p className="text-xs text-[#3A7CA5] mt-1">
-                Paksa perubahan status kebencanaan sistem. Pilihan status akan memicu aksi telemetri yang berbeda.
+                Paksa perubahan status kebencanaan sistem. Hasil override akan disebarkan langsung ke seluruh user.
               </p>
             </div>
             
@@ -202,8 +223,11 @@ export default function App() {
 
           {isLoggedIn && isAdmin && (
             <div className="lg:col-span-5 flex flex-col">
-              {/* Salurkan data chart live dan getaran riil ke komponen Grafik */}
-              <VibrationChart chartData={chartData} vibration={liveVibration} />
+              <VibrationChart 
+                chartData={chartData} 
+                vibration={liveVibration} 
+                activity={mlActivity} 
+              />
             </div>
           )}
         </section>
@@ -242,7 +266,7 @@ export default function App() {
 
       </main>
 
-      {/* ================= CUSTOM MODAL POP-UP KONFIRMASI (MURNI TAILWIND) ================= */}
+      {/* CUSTOM MODAL POP-UP KONFIRMASI */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
@@ -260,7 +284,7 @@ export default function App() {
                 <span className={`font-bold uppercase ${pendingStatus === "Warning" ? "text-red-600" : "text-amber-500"}`}>
                   {pendingStatus}
                 </span>
-                ? Aksi ini akan mengubah tampilan utama dashboard publik dan memicu pengiriman broadcast notifikasi darurat secara instan ke seluruh ID Telegram user yang terdaftar.
+                ? Aksi ini akan mengubah tampilan utama dashboard publik dan memicu pengiriman broadcast notifikasi darurat.
               </p>
             </div>
             

@@ -12,13 +12,17 @@ import { Badge } from "@/components/ui/badge"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
-export default function VibrationChart() {
+export default function VibrationChart({ chartData = [0, 0, 0, 0, 0, 0], vibration = 0 }) {
+  
+  // Label sumbu X dinamis berdasarkan panjang data (misal: T-5s, T-4s, ..., T-0s)
+  const labels = Array.from({ length: chartData.length }, (_, i) => `T-${chartData.length - 1 - i}s`)
+
   const data = {
-    labels: ["10:00", "10:05", "10:10", "10:15", "10:20", "10:25"],
+    labels: labels,
     datasets: [
       {
-        label: "Frekuensi Getaran (Hz)",
-        data: [2.3, 2.8, 2.1, 3.4, 2.9, 2.5],
+        label: "Getaran Tanah (mm/s)",
+        data: chartData, // <-- Menerima array data realtime dari WebSocket
         borderColor: "#2F6690",
         backgroundColor: "rgba(129, 195, 215, 0.2)",
         borderWidth: 2.5,
@@ -34,13 +38,14 @@ export default function VibrationChart() {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false, // Dimatikan agar update realtime terasa mulus tanpa lag
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false }, ticks: { color: "#3A7CA5", font: { size: 11 } } },
       y: { 
         beginAtZero: true, 
         grid: { color: "#EBF0F3" }, 
-        ticks: { color: "#3A7CA5", stepSize: 1, font: { size: 11 } } 
+        ticks: { color: "#3A7CA5", font: { size: 11 } } 
       },
     },
   }
@@ -51,14 +56,14 @@ export default function VibrationChart() {
       <div className="flex h-20 items-center justify-between border-b border-[#D9DCD6]/40 px-6 bg-slate-50/50 flex-shrink-0">
         <div>
           <h3 className="text-base font-bold text-[#16425B]">
-            Grafik Getaran Tanah
+            Grafik Getaran Tanah Realtime
           </h3>
           <p className="text-xs text-[#3A7CA5] font-medium mt-0.5">
-            Analisis spektrum frekuensi 30 menit terakhir
+            Nilai saat ini: <span className="font-bold text-[#16425B]">{vibration} mm/s</span>
           </p>
         </div>
         <Badge className="bg-[#81C3D7]/20 text-[#2F6690] border border-[#81C3D7]/40 shadow-none px-2.5 py-0.5 animate-pulse">
-          Realtime
+          Live Stream
         </Badge>
       </div>
 
