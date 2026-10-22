@@ -6,7 +6,7 @@ const stats = [
     value: "12",
   },
   {
-    title: "Telegram",
+    title: "WhatsApp",
     value: "Connected",
   },
   {

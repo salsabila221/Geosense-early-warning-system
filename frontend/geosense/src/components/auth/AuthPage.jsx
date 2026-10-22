@@ -1,10 +1,22 @@
 import { useState } from "react"
+import { ArrowLeft, UserRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 // 1. IMPORT LIBRARY GOOGLE AUTH RESMI
 import { GoogleLogin } from "@react-oauth/google"
+import { apiFetch } from "@/lib/api"
+
+// Nomor WhatsApp Indonesia: 08xx / 8xx / +628xx / 628xx -> 628xx
+const normalizePhone = (raw) => {
+  const digits = (raw || "").replace(/\D/g, "")
+  if (digits.startsWith("0")) return `62${digits.slice(1)}`
+  if (digits.startsWith("8")) return `62${digits}`
+  return digits
+}
+
+const isValidPhone = (raw) => /^628[1-9]\d{6,11}$/.test(normalizePhone(raw))
 
 export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackToDashboard }) {
   const [activeTab, setActiveTab] = useState(initialTab) 
@@ -13,7 +25,8 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
   // State Manajemen Google Login Flow
   const [isOnboarding, setIsOnboarding] = useState(false) 
   const [googleUser, setGoogleUser] = useState({ name: "", email: "" }) 
-  const [telegramOnboarding, setTelegramOnboarding] = useState("")
+  const [googleCredential, setGoogleCredential] = useState("") // ID token Google, dipakai ulang saat simpan onboarding
+  const [phoneOnboarding, setPhoneOnboarding] = useState("")
   const [fullnameOnboarding, setFullnameOnboarding] = useState("")
 
   
@@ -27,38 +40,37 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
   // 2. SIGN UP MANUAL
   const handleSignUp = (e) => {
     e.preventDefault()
-    alert("Pendaftaran Berhasil! Silakan login menggunakan akun Anda.")
-    setActiveTab("login")
+    alert(
+      'Pendaftaran manual belum tersedia. Silakan pakai tombol "Daftar dengan Google" di bawah — setelah itu kamu akan diminta melengkapi nama lengkap dan nomor WhatsApp.'
+    )
   }
 
   // 3. HANDLER GOOGLE LOGIN REAL (DIPANGGIL SAAT GOOGLE BERHASIL AUTH)
   const handleGoogleSuccess = async (credentialResponse) => {
     const tokenDariGoogle = credentialResponse.credential
-    
+    setGoogleCredential(tokenDariGoogle)
+
     try {
-      // Kirim ID Token mentah ke backend FastAPI kalian untuk diverifikasi & cek DB
-      const response = await fetch("http://localhost:8000/api/auth/google", {
+      // Kirim ID Token mentah ke backend FastAPI untuk diverifikasi & cek database
+      const { ok, data: result } = await apiFetch("/api/auth/google", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: tokenDariGoogle })
+        body: { credential: tokenDariGoogle },
+        auth: false,
       })
-      
-      const result = await response.json()
-      
-      if (result.error) {
-        alert(result.error)
+
+      if (!ok) {
+        alert(result?.detail || "Gagal verifikasi akun Google.")
         return
       }
 
       if (result.is_new_user) {
-        // --- KONDISI A: EMAIL BELUM ADA DI SQLITE (WARGA BARU) ---
+        // --- KONDISI A: EMAIL BELUM ADA DI DATABASE (WARGA BARU) ---
         setGoogleUser({ email: result.email, name: result.name })
-        setFullnameOnboarding(result.name) // Isi otomatis nama dari Google
-        setIsOnboarding(true) // Alihkan ke layar isi Telegram
+        setFullnameOnboarding(result.name || "") // Isi otomatis nama dari Google
+        setIsOnboarding(true) // Alihkan ke layar isi nomor HP
       } else {
         // --- KONDISI B: USER LAMA ATAU ADMIN ---
-        // UPDATE: Sekarang ikut mengirimkan result.name ke App.jsx
-        onLoginSuccess(result.is_admin, result.name)
+        onLoginSuccess(result.is_admin, result.name, result.access_token, result.user?.phone_number)
       }
     } catch (err) {
       console.error("Gagal koneksi ke backend:", err)
@@ -66,35 +78,53 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
     }
   }
 
-  // 4. FUNGSI MENYIMPAN DATA ONBOARDING TELEGRAM KE DATABASE BACKEND
+  // 4. FUNGSI MENYIMPAN DATA ONBOARDING KE DATABASE BACKEND
   const handleCompleteOnboarding = async (e) => {
     e.preventDefault()
-    
+
+    if (!googleCredential) {
+      alert("Sesi Google sudah tidak berlaku. Silakan login ulang dengan Google.")
+      setIsOnboarding(false)
+      return
+    }
+
+    if (fullnameOnboarding.trim().length < 2) {
+      alert("Nama lengkap wajib diisi (minimal 2 karakter).")
+      return
+    }
+
+    if (!isValidPhone(phoneOnboarding)) {
+      alert("Nomor WhatsApp tidak valid. Contoh: 08123456789 atau +628123456789.")
+      return
+    }
+
     try {
-      // Kirim data lengkap ke backend untuk di-INSERT ke tabel 'users' SQLite
-      const response = await fetch("http://localhost:8000/api/auth/google/register", {
+      // Kirim data lengkap ke backend untuk di-INSERT ke tabel 'users'
+      const { ok, data: result } = await apiFetch("/api/auth/google/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: googleUser.email,
+        body: {
+          credential: googleCredential,
           fullname: fullnameOnboarding,
-          telegram: telegramOnboarding.startsWith("@") ? telegramOnboarding : `@${telegramOnboarding}`
-        })
+          phone_number: phoneOnboarding,
+        },
+        auth: false,
       })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        alert("Pendaftaran berhasil! Akun Anda telah terintegrasi dengan Telegram EWS.")
+
+      if (ok) {
+        alert("Pendaftaran berhasil! Akun Anda sudah tersimpan di database GeoSense.")
         setIsOnboarding(false)
-        // UPDATE: Mengirimkan status user biasa (false) dan nama lengkap onboarding-nya
-        onLoginSuccess(false, fullnameOnboarding) 
+        onLoginSuccess(
+          result.user?.is_admin ?? false,
+          result.user?.fullname || fullnameOnboarding,
+          result.access_token,
+          result.user?.phone_number
+        )
       } else {
-        alert(result.detail || "Gagal menyimpan data pendaftaran.")
+        alert(result?.detail || "Gagal menyimpan data pendaftaran.")
       }
     } catch (err) {
       console.error("Gagal menyimpan onboarding:", err)
-      alert("Terjadi kesalahan jaringan saat mendaftarkan data Telegram.")
+      alert("Terjadi kesalahan jaringan saat mendaftarkan data.")
     }
   }
 
@@ -104,11 +134,12 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
       <div className="flex min-h-screen items-center justify-center bg-[#F4F6F8] font-sans text-[#16425B] antialiased px-4 py-12">
         <Card className="w-full max-w-md border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.03)] rounded-2xl overflow-hidden">
           <CardHeader className="space-y-2 text-center pt-8">
-            <CardTitle className="text-xl font-extrabold tracking-tight text-[#16425B]">
-              👋 Sedikit Lagi, Kak!
+            <CardTitle className="flex items-center justify-center gap-2 text-xl font-extrabold tracking-tight text-[#16425B]">
+              <UserRound className="h-5 w-5 text-[#3A7CA5]" aria-hidden="true" />
+              Sedikit Lagi
             </CardTitle>
             <CardDescription className="text-xs text-[#3A7CA5] font-medium max-w-[320px] mx-auto leading-relaxed">
-              Akun Google <span className="font-semibold text-[#16425B]">{googleUser.email}</span> berhasil ditautkan. Lengkapi data berikut agar terintegrasi dengan Notifikasi Telegram EWS.
+              Akun Google <span className="font-semibold text-[#16425B]">{googleUser.email}</span> berhasil ditautkan. Isi nama lengkap dan nomor WhatsApp aktif kamu — nomor ini dipakai untuk mengirim peringatan darurat.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
@@ -126,35 +157,34 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
               </div>
               
               <div className="space-y-1.5">
-                <Label htmlFor="ob-telegram" className="text-xs font-bold uppercase tracking-wider text-[#16425B]/80">Username Telegram</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#3A7CA5] font-bold text-sm pointer-events-none">
-                    @
-                  </span>
-                  <Input 
-                    id="ob-telegram" 
-                    type="text" 
-                    value={telegramOnboarding}
-                    onChange={(e) => setTelegramOnboarding(e.target.value)}
-                    className="pl-8 rounded-xl border-[#D9DCD6]/60 focus-visible:ring-[#3A7CA5] placeholder:text-slate-400 text-sm py-5" 
-                    placeholder="username_kamu" 
-                    required 
-                  />
-                </div>
+                <Label htmlFor="ob-phone" className="text-xs font-bold uppercase tracking-wider text-[#16425B]/80">Nomor WhatsApp</Label>
+                <Input 
+                  id="ob-phone" 
+                  type="tel" 
+                  inputMode="tel"
+                  value={phoneOnboarding}
+                  onChange={(e) => setPhoneOnboarding(e.target.value)}
+                  className="rounded-xl border-[#D9DCD6]/60 focus-visible:ring-[#3A7CA5] placeholder:text-slate-400 text-sm py-5" 
+                  placeholder="08123456789" 
+                  required 
+                />
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  Nomor ini dipakai untuk <span className="font-semibold text-[#2F6690]">notifikasi darurat via WhatsApp</span>. Pastikan aktif dan terdaftar di WhatsApp.
+                </p>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
                 <Button 
                   type="button"
                   variant="outline"
                   onClick={() => setIsOnboarding(false)}
-                  className="w-1/3 border-[#D9DCD6]/60 text-slate-500 font-bold uppercase tracking-wider py-5 rounded-xl text-xs transition-colors cursor-pointer"
+                  className="min-h-11 w-full rounded-xl border-[#D9DCD6]/60 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors sm:w-1/3"
                 >
                   Batal
                 </Button>
                 <Button 
                   type="submit" 
-                  className="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-wider py-5 rounded-xl text-xs shadow-md shadow-emerald-600/10 border-none cursor-pointer"
+                  className="min-h-11 w-full rounded-xl border-none bg-emerald-600 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-emerald-600/10 hover:bg-emerald-700 sm:w-2/3"
                 >
                   Selesaikan Pendaftaran
                 </Button>
@@ -175,7 +205,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
         <div className="grid grid-cols-2 border-b border-[#D9DCD6]/40 text-center bg-slate-50/50">
           <button
             onClick={() => setActiveTab("login")}
-            className={`py-3.5 text-xs uppercase tracking-wider font-bold transition-all ${
+            className={`min-h-11 py-3 text-xs uppercase tracking-wider font-bold transition-all ${
               activeTab === "login"
                 ? "border-b-2 border-[#3A7CA5] text-[#16425B] bg-white"
                 : "text-[#3A7CA5] hover:text-[#16425B] hover:bg-slate-50"
@@ -185,7 +215,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
           </button>
           <button
             onClick={() => setActiveTab("signup")}
-            className={`py-3.5 text-xs uppercase tracking-wider font-bold transition-all ${
+            className={`min-h-11 py-3 text-xs uppercase tracking-wider font-bold transition-all ${
               activeTab === "signup"
                 ? "border-b-2 border-[#3A7CA5] text-[#16425B] bg-white"
                 : "text-[#3A7CA5] hover:text-[#16425B] hover:bg-slate-50"
@@ -213,7 +243,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
                 <button
                   type="button"
                   onClick={() => setChooseAdmin(false)}
-                  className={`py-2 text-xs font-bold tracking-wide rounded-lg transition-all border-none cursor-pointer ${
+                  className={`min-h-11 rounded-lg border-none py-2 text-xs font-bold tracking-wide transition-all ${
                     !chooseAdmin
                       ? "bg-[#3A7CA5] text-white shadow-sm"
                       : "text-[#3A7CA5] hover:text-[#16425B]"
@@ -224,7 +254,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
                 <button
                   type="button"
                   onClick={() => setChooseAdmin(true)}
-                  className={`py-2 text-xs font-bold tracking-wide rounded-lg transition-all border-none cursor-pointer ${
+                  className={`min-h-11 rounded-lg border-none py-2 text-xs font-bold tracking-wide transition-all ${
                     chooseAdmin
                       ? "bg-[#16425B] text-white shadow-sm"
                       : "text-[#3A7CA5] hover:text-[#16425B]"
@@ -257,7 +287,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
                 </div>
                 <Button 
                   type="submit" 
-                  className={`w-full font-bold uppercase tracking-wider py-5 rounded-xl text-xs shadow-md transition-all mt-4 text-white border-none cursor-pointer ${
+                  className={`mt-4 min-h-11 w-full rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all ${
                     chooseAdmin 
                       ? "bg-[#16425B] hover:bg-[#16425B]/90 shadow-[#16425B]/10" 
                       : "bg-[#3A7CA5] hover:bg-[#2F6690] shadow-[#3A7CA5]/10"
@@ -331,23 +361,22 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="telegram" className="text-xs font-bold uppercase tracking-wider text-[#16425B]/80">Username Telegram</Label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#3A7CA5] font-bold text-sm pointer-events-none">
-                      @
-                    </span>
-                    <Input 
-                      id="telegram" 
-                      type="text" 
-                      className="pl-8 rounded-xl border-[#D9DCD6]/60 focus-visible:ring-[#3A7CA5] placeholder:text-slate-400 text-sm py-5" 
-                      placeholder="username_kamu" 
-                      required 
-                    />
-                  </div>
+                  <Label htmlFor="signup-phone" className="text-xs font-bold uppercase tracking-wider text-[#16425B]/80">Nomor WhatsApp</Label>
+                  <Input 
+                    id="signup-phone" 
+                    type="tel" 
+                    inputMode="tel"
+                    className="rounded-xl border-[#D9DCD6]/60 focus-visible:ring-[#3A7CA5] placeholder:text-slate-400 text-sm py-5" 
+                    placeholder="08123456789" 
+                    required 
+                  />
+                  <p className="text-[11px] leading-relaxed text-slate-500">
+                    Dipakai untuk mengirim <span className="font-semibold text-[#2F6690]">notifikasi darurat via WhatsApp</span>.
+                  </p>
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#3A7CA5] hover:bg-[#2F6690] text-white font-bold uppercase tracking-wider py-5 rounded-xl text-xs shadow-md shadow-[#3A7CA5]/10 mt-6 border-none cursor-pointer"
+                  className="mt-6 min-h-11 w-full rounded-xl bg-[#3A7CA5] py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-[#3A7CA5]/10 hover:bg-[#2F6690]"
                 >
                   Daftar Akun
                 </Button>
@@ -377,9 +406,10 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
         <div className="text-center pb-6 pt-4 bg-slate-50/30 border-t border-[#D9DCD6]/20">
           <button 
             onClick={onBackToDashboard} 
-            className="text-xs font-bold tracking-wide text-[#3A7CA5] hover:text-[#16425B] underline underline-offset-4 transition-colors bg-transparent border-none cursor-pointer"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border-none bg-transparent px-3 text-xs font-bold tracking-wide text-[#3A7CA5] underline underline-offset-4 transition-colors hover:text-[#16425B]"
           >
-            ← Kembali ke Dashboard Utama
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Kembali ke Dashboard Utama
           </button>
         </div>
 

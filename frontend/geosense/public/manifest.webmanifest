@@ -1,0 +1,50 @@
+{
+  "id": "/",
+  "name": "GeoSense - Early Warning System",
+  "short_name": "GeoSense",
+  "description": "Sistem peringatan dini pergeseran tanah berbasis sensor telemetri: status real-time, panduan tanggap bencana, dan nomor darurat.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F4F6F8",
+  "theme_color": "#16425B",
+  "categories": ["utilities", "weather", "education"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Panduan Tanggap Bencana",
+      "short_name": "Panduan",
+      "url": "/#panduan",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Nomor Darurat",
+      "short_name": "Darurat",
+      "url": "/#nomor-darurat",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
