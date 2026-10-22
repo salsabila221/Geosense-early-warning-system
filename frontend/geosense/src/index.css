@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* Deep Blue Waters */
+  --color-brand-dark: #16425B;
+  --color-brand-primary: #2F6690;
+  --color-brand-secondary: #3A7CA5;
+  --color-brand-light: #81C3D7;
+  --color-brand-bg: #D9DCD6;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Target sentuh minimum 44x44 px untuk kontrol peta. */
+.leaflet-control-zoom a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  font-size: 22px !important;
+}
+
+/* Perbesar area sentuh tautan atribusi tanpa mengubah tinggi bar. */
+.leaflet-control-attribution a {
+  position: relative;
+  display: inline-block;
+}
+
+.leaflet-control-attribution a::after {
+  content: "";
+  position: absolute;
+  inset: -15px;
+}
+
+/* ========================= */
+/* React Leaflet */
+/* ========================= */
+
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
+
+/* Kartu fitur: 2 kolom tablet (768-1024px), 3 kolom desktop (>1024px). */
+.feature-grid {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
+  .feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
