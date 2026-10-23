@@ -16,12 +16,13 @@ export default function HeroSection({ status = "Aman", lastUpdated, roleLabel = 
             {roleLabel}
           </span>
           <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#16425B] sm:text-3xl md:text-4xl lg:text-5xl">
-            Sistem Peringatan Dini <br />
-            <span className="text-lg font-semibold text-[#3A7CA5] sm:text-2xl md:text-3xl">Pergeseran & Pergerakan Tanah</span>
+            Sistem Peringatan <br />
+            <span className="text-lg font-semibold text-[#3A7CA5] sm:text-2xl md:text-3xl">Pergerakan Tanah</span>
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-[#16425B]/80 sm:text-base">
-            Pemantauan kondisi kestabilan tanah secara real-time berbasis jaringan sensor telemetri 
-            untuk mendeteksi potensi tanah longsor dan mendistribusikan peringatan dini secara cepat.
+            Pemantauan kondisi kestabilan tanah secara real-time berbasis jaringan sensor telemetri
+            untuk mendeteksi getaran dan pergerakan tanah, lalu mengirimkan peringatan setelah
+            indikasi pergerakan terdeteksi.
           </p>
         </div>
 

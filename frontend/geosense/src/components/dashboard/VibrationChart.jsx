@@ -8,8 +8,9 @@ import {
   Legend,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
-import { Activity, MapPin, Radio, WifiOff } from "lucide-react"
+import { Activity, Compass, MapPin, Radio, WifiOff } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { extractNodeGps, formatCoordinate, formatDirection } from "@/lib/telemetry"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -31,6 +32,7 @@ export default function VibrationChart({
   activity = "-",
   nodes = null,
   location = null,
+  direction = null,
   samplingRate = 90,
 }) {
   const safeSamplingRate = Number(samplingRate) > 0 ? Number(samplingRate) : 90
@@ -160,7 +162,9 @@ export default function VibrationChart({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {NODE_IDS.map((nodeId) => {
             const node = nodes?.[nodeId] || {}
-            const online = Boolean(node.online)
+            const online =
+              typeof node.online === "boolean" ? node.online : Object.keys(node).length > 0
+            const gps = extractNodeGps(node)
 
             return (
               <div
@@ -226,26 +230,56 @@ export default function VibrationChart({
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-2 flex items-center gap-1.5 text-[9px]">
+                  <MapPin className="h-3 w-3 flex-shrink-0 text-[#6B7F8A]" aria-hidden="true" />
+                  {gps ? (
+                    <span className="truncate font-mono text-[#2F6690]">
+                      GPS {formatCoordinate(gps.latitude)}, {formatCoordinate(gps.longitude)}
+                    </span>
+                  ) : (
+                    <span className="font-medium text-amber-600">GPS belum tersedia</span>
+                  )}
+                </div>
               </div>
             )
           })}
         </div>
 
-        <div className="mt-3 flex flex-col gap-2 border-t border-[#D9DCD6]/40 pt-3 text-[11px] text-[#2F6690] sm:flex-row sm:items-center sm:justify-between">
-          <span className="inline-flex items-center gap-1.5">
-            <Activity className="h-3.5 w-3.5 flex-shrink-0" />
-            Aktivitas ML (Random Forest):{" "}
-            <strong className="text-[#16425B]">{activity || "-"}</strong>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-            Lokasi TDOA:{" "}
-            <strong className="text-[#16425B]">
-              {location
-                ? `X ${formatMetric(location.x)} m, Y ${formatMetric(location.y)} m`
-                : "Menunggu event 3 node"}
-            </strong>
-          </span>
+        <div className="mt-3 space-y-2 border-t border-[#D9DCD6]/40 pt-3 text-[11px] text-[#2F6690]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="inline-flex items-center gap-1.5">
+              <Activity className="h-3.5 w-3.5 flex-shrink-0" />
+              Aktivitas ML (Random Forest):{" "}
+              <strong className="text-[#16425B]">{activity || "-"}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              Lokasi TDOA:{" "}
+              <strong className="text-[#16425B]">
+                {location
+                  ? `X ${formatMetric(location.x)} m, Y ${formatMetric(location.y)} m`
+                  : "Menunggu event 3 node"}
+              </strong>
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-1.5 rounded-lg bg-slate-50/70 px-2.5 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="inline-flex items-center gap-1.5">
+              <Compass className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+              Arah longsor:{" "}
+              <strong className="text-[#16425B]">
+                {direction ? formatDirection(direction) : "Menunggu hasil triangulasi"}
+              </strong>
+            </span>
+            <span className="text-[10px] text-slate-500">
+              {direction
+                ? direction.source === "location.x_y"
+                  ? "x = timur, y = utara; 0° = Utara"
+                  : "0° = Utara, searah jarum jam"
+                : "Butuh event getaran yang terdeteksi 3 node"}
+            </span>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "GeoSense - Early Warning System",
+  "name": "GeoSense - Sistem Peringatan Pergerakan Tanah",
   "short_name": "GeoSense",
-  "description": "Sistem peringatan dini pergeseran tanah berbasis sensor telemetri: status real-time, panduan tanggap bencana, dan nomor darurat.",
+  "description": "Sistem pemantauan dan peringatan pergerakan tanah berbasis sensor telemetri: status real-time, panduan tanggap bencana, dan nomor darurat.",
   "lang": "id",
   "dir": "ltr",
   "start_url": "/",
