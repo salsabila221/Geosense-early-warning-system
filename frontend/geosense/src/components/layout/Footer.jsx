@@ -9,7 +9,7 @@ export default function Footer() {
           </h3>
 
           <p className="text-sm text-white/70">
-            Early Warning System for Landslide Monitoring
+            Landslide Monitoring & Warning System
           </p>
         </div>
 

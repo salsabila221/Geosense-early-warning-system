@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { io } from "socket.io-client" // Import Socket.IO Client
 import { History, MessageCircle, ShieldAlert, ShieldCheck, Siren, TriangleAlert, Users } from "lucide-react"
 import Header from "@/components/layout/Header"
@@ -15,6 +15,7 @@ import AuthPage from "@/components/auth/AuthPage"
 import { Button } from "@/components/ui/button"
 import { API_URL, apiFetch, clearToken, getToken, setToken } from "@/lib/api"
 import { toDisplayStatus } from "@/lib/status"
+import { computeLandslideDirection, getNodeMapData } from "@/lib/telemetry"
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -47,6 +48,13 @@ export default function App() {
   const [waTestPhone, setWaTestPhone] = useState("")
   const [waTesting, setWaTesting] = useState(false)
 
+  // Node + arah longsor diturunkan dari payload MQTT terakhir.
+  const nodeMapData = useMemo(() => getNodeMapData(nodeTelemetry), [nodeTelemetry])
+  const landslideDirection = useMemo(
+    () => computeLandslideDirection(estimatedLocation, nodeMapData),
+    [estimatedLocation, nodeMapData],
+  )
+
   // ================= PIPELINE SOCKET.IO (LIVE DATA FROM BACKEND FASTAPI) =================
   useEffect(() => {
     // Hubungkan ke Backend FastAPI (Socket.IO di-mount di app yang sama, port 8000)
@@ -72,7 +80,11 @@ export default function App() {
         setLastUpdated(`Live (${dataFromServer.kondisi_tanah || 'Sensor'}) | ${timeStr} WIB`)
 
         // 3. Update Nilai Getaran (Amplitudo Peak-to-Peak) & Streaming Chart Data
-        if (dataFromServer.p2p_amplitude !== undefined) {
+        // Pesan gpsdata hanya memperbarui peta; jangan menambah titik duplikat ke grafik.
+        if (
+          dataFromServer.p2p_amplitude !== undefined &&
+          dataFromServer.update_type !== "gpsdata"
+        ) {
           const ampVal = parseFloat(dataFromServer.p2p_amplitude)
           setLiveVibration(ampVal)
 
@@ -99,15 +111,30 @@ export default function App() {
         }
 
         const incomingLocation = dataFromServer.location
-        if (
-          incomingLocation &&
-          Number.isFinite(Number(incomingLocation.x)) &&
-          Number.isFinite(Number(incomingLocation.y))
-        ) {
-          setEstimatedLocation({
-            x: Number(incomingLocation.x),
-            y: Number(incomingLocation.y),
-          })
+        const incomingDirection = dataFromServer.direction
+        const hasLocationObject = incomingLocation && typeof incomingLocation === "object"
+        const hasLocationValue =
+          hasLocationObject &&
+          [
+            incomingLocation.x,
+            incomingLocation.y,
+            incomingLocation.latitude,
+            incomingLocation.longitude,
+            incomingLocation.bearing,
+            incomingLocation.bearing_degrees,
+            incomingLocation.direction,
+          ].some((value) => value !== undefined && value !== null && value !== "")
+
+        if (hasLocationValue) {
+          const nextLocation = { ...incomingLocation }
+          if (Number.isFinite(Number(nextLocation.x))) nextLocation.x = Number(nextLocation.x)
+          if (Number.isFinite(Number(nextLocation.y))) nextLocation.y = Number(nextLocation.y)
+          if (!nextLocation.direction && incomingDirection) {
+            nextLocation.direction = incomingDirection
+          }
+          setEstimatedLocation(nextLocation)
+        } else if (incomingDirection) {
+          setEstimatedLocation({ direction: incomingDirection })
         } else {
           setEstimatedLocation(null)
         }
@@ -336,6 +363,10 @@ export default function App() {
     setCurrentPage("dashboard")
   }
 
+  const waDevice = waConfig?.device
+  const waDeviceStatus = waConfig?.device_status ?? waDevice?.device_status
+  const waDeviceDisconnected = Boolean(waDeviceStatus && waDeviceStatus !== "connect")
+
   if (isRestoringSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F4F6F8] text-sm font-semibold text-[#3A7CA5]">
@@ -443,7 +474,12 @@ export default function App() {
         {/* GRID DASHBOARD MAP & CHART */}
         <section id="peta" className="mt-6 grid min-w-0 scroll-mt-32 items-stretch gap-6 lg:grid-cols-12">
           <div className={isAdmin ? "lg:col-span-5 flex min-w-0 flex-col" : "lg:col-span-12 flex min-w-0 flex-col"}>
-            <LiveMap isAdmin={isAdmin} />
+            <LiveMap
+              isAdmin={isAdmin}
+              nodes={nodeMapData}
+              location={estimatedLocation}
+              direction={landslideDirection}
+            />
           </div>
 
           {isLoggedIn && isAdmin && (
@@ -454,6 +490,7 @@ export default function App() {
                 activity={mlActivity} 
                 nodes={nodeTelemetry}
                 location={estimatedLocation}
+                direction={landslideDirection}
                 samplingRate={samplingRate}
               />
             </div>
@@ -635,10 +672,22 @@ export default function App() {
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                    waConfig?.enabled ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                    !waConfig?.token_configured
+                      ? "bg-red-100 text-red-700"
+                      : waDeviceDisconnected
+                        ? "bg-amber-100 text-amber-700"
+                        : waConfig?.enabled
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {waConfig?.enabled ? "Aktif" : "Nonaktif"}
+                  {!waConfig?.token_configured
+                    ? "Nonaktif"
+                    : waDeviceDisconnected
+                      ? "Device Terputus"
+                      : waConfig?.enabled
+                        ? "Aktif"
+                        : "Nonaktif"}
                 </span>
                 <span className="inline-flex items-center rounded-lg bg-sky-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
                   {waConfig?.recipients ?? 0} penerima
@@ -653,6 +702,25 @@ export default function App() {
                   (menu <span className="font-semibold">Device → Token</span>, pastikan device sudah
                   <span className="font-semibold"> Connected</span>) ke file <code className="font-mono">.env</code> backend,
                   lalu restart backend.
+                </div>
+              )}
+
+              {waConfig?.token_configured && waDeviceDisconnected && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800">
+                  <span className="font-bold">Device Fonnte terputus.</span> Status:{" "}
+                  <code className="font-mono">{waDeviceStatus}</code>. Token dan kuota masih terbaca, tetapi
+                  WhatsApp tidak bisa mengirim sampai device tersambung lagi.
+                  <div className="mt-1">
+                    Buka dashboard Fonnte, lalu scan QR ulang dari ponsel nomor device sampai status
+                    berubah menjadi <span className="font-semibold">Connected</span>.
+                  </div>
+                  {(waDevice?.device || waDevice?.quota) && (
+                    <div className="mt-1 text-[11px] text-amber-700/80">
+                      {waDevice?.device ? `Nomor device: ${waDevice.device}` : ""}
+                      {waDevice?.quota ? ` · Kuota: ${waDevice.quota}` : ""}
+                      {waDevice?.expired ? ` · Aktif sampai: ${waDevice.expired}` : ""}
+                    </div>
+                  )}
                 </div>
               )}
 

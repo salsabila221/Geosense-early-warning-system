@@ -138,15 +138,20 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
             onClick={goDashboard}
             className="group flex min-h-11 min-w-0 items-center gap-3 rounded-xl text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50 sm:gap-4"
           >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2F6690] to-[#16425B] text-base font-bold text-white shadow-md shadow-[#2F6690]/20 sm:h-12 sm:w-12 sm:text-lg">
-              G
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-[#81C3D7]/50 sm:h-14 sm:w-14">
+              <img
+                src="/brand/geosense-mark.png"
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full object-contain p-0.5"
+              />
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-lg font-extrabold tracking-tight text-[#16425B] sm:text-xl">
                 Geosense
               </h1>
               <p className="truncate text-[10px] font-medium uppercase tracking-wider text-[#2F6690] sm:text-xs">
-                Early Warning System
+                Pemantauan Pergerakan Tanah
               </p>
             </div>
           </button>
