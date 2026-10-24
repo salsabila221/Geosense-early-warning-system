@@ -42,6 +42,17 @@ export default function VibrationChart({
   )
   const hasNodeSignals = signalLength > 0
 
+  // Event waveform baru mengirim ADC counts (belum terkalibrasi), sedangkan
+  // payload lama memakai mV. Jangan hardcode "mV" lagi.
+  const rawUnit = NODE_IDS.map((nodeId) => nodes?.[nodeId]?.unit).find(Boolean)
+  const unit = String(rawUnit || "mV").toLowerCase()
+  const isAdcCounts = unit.includes("adc") || unit.includes("count")
+  const metricUnit = isAdcCounts ? "counts" : "mV"
+  const unitLabel = isAdcCounts ? "ADC counts" : "mV"
+  const eventNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(
+    (node) => node && node.event_id !== undefined && node.event_id !== null,
+  )
+
   const labels = hasNodeSignals
     ? Array.from({ length: signalLength }, (_, index) =>
         `${(index / safeSamplingRate).toFixed(1)}s`,
@@ -64,7 +75,7 @@ export default function VibrationChart({
       }))
     : [
         {
-          label: "Getaran Tanah (mV)",
+          label: `Getaran Tanah (${unitLabel})`,
           data: chartData,
           borderColor: "#2F6690",
           backgroundColor: "rgba(129, 195, 215, 0.2)",
@@ -121,7 +132,7 @@ export default function VibrationChart({
         ticks: { color: "#3A7CA5", font: { size: 9 } },
         title: {
           display: true,
-          text: "Amplitudo (mV)",
+          text: `Amplitudo (${unitLabel})`,
           color: "#3A7CA5",
           font: { size: 10, weight: "600" },
         },
@@ -138,8 +149,16 @@ export default function VibrationChart({
           </h3>
           <p className="mt-0.5 text-[11px] font-medium text-[#2F6690] sm:text-xs">
             p2p maksimum:{" "}
-            <span className="font-bold text-[#16425B]">{formatMetric(vibration)} mV</span>
-            {hasNodeSignals ? ` | ${signalLength} sampel terakhir per node` : " | menunggu stream processing"}
+            <span className="font-bold text-[#16425B]">
+              {formatMetric(vibration)} {metricUnit}
+            </span>
+            {eventNode
+              ? ` | Event #${eventNode.event_id} · ${eventNode.sample_count ?? signalLength} sampel${
+                  eventNode.utc_valid === false ? " · UTC estimasi" : ""
+                }`
+              : hasNodeSignals
+                ? ` | ${signalLength} sampel terakhir per node`
+                : " | menunggu stream processing"}
           </p>
         </div>
         <Badge className="inline-flex flex-shrink-0 items-center gap-1.5 border border-[#81C3D7]/40 bg-[#81C3D7]/20 px-2.5 py-0.5 text-[#2F6690] shadow-none">
@@ -208,7 +227,7 @@ export default function VibrationChart({
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
                       {formatMetric(node.p2p)}{" "}
-                      <span className="text-[9px] font-medium">mV</span>
+                      <span className="text-[9px] font-medium">{metricUnit}</span>
                     </p>
                   </div>
                   <div>
@@ -217,7 +236,7 @@ export default function VibrationChart({
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
                       {formatMetric(node.rms)}{" "}
-                      <span className="text-[9px] font-medium">mV</span>
+                      <span className="text-[9px] font-medium">{metricUnit}</span>
                     </p>
                   </div>
                   <div>
@@ -226,7 +245,7 @@ export default function VibrationChart({
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
                       {formatMetric(node.peak)}{" "}
-                      <span className="text-[9px] font-medium">mV</span>
+                      <span className="text-[9px] font-medium">{metricUnit}</span>
                     </p>
                   </div>
                 </div>
