@@ -21,7 +21,7 @@ import {
   showTestNotification,
 } from "@/lib/push"
 
-export default function BrowserNotifications() {
+export default function BrowserNotifications({ isAdmin = false }) {
   const [supported] = useState(() => isPushSupported())
   const [permission, setPermission] = useState(() => getNotificationPermission())
   const [subscribed, setSubscribed] = useState(false)
@@ -93,9 +93,46 @@ export default function BrowserNotifications() {
     setMessage(null)
     try {
       await showTestNotification()
-      setMessage({ type: "ok", text: "Notifikasi tes dikirim. Cek pojok perangkat kamu." })
+      setMessage({ type: "ok", text: "Notifikasi tes ditampilkan. Cek pojok perangkat kamu." })
     } catch (error) {
       setMessage({ type: "error", text: error.message || "Gagal mengirim notifikasi tes." })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleServerTest = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const { ok, data } = await apiFetch("/api/admin/push/test", { method: "POST" })
+      if (!ok) {
+        throw new Error(data?.detail || "Gagal mengirim push dari server.")
+      }
+
+      const total = Number(data?.total ?? 0)
+      const sent = Number(data?.sent ?? 0)
+      const failed = Number(data?.failed ?? 0)
+      const removed = Number(data?.removed ?? 0)
+
+      if (total === 0) {
+        setMessage({
+          type: "error",
+          text: "Belum ada perangkat yang berlangganan push. Aktifkan notifikasi di perangkat ini dulu.",
+        })
+      } else if (failed > 0) {
+        setMessage({
+          type: "error",
+          text: `Push server: terkirim ${sent}, gagal ${failed}, dihapus ${removed}. Cek log backend untuk kode error.`,
+        })
+      } else {
+        setMessage({
+          type: "ok",
+          text: `Push server terkirim ke ${sent} perangkat.`,
+        })
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: error.message || "Gagal mengirim push dari server." })
     } finally {
       setBusy(false)
     }
@@ -212,6 +249,21 @@ export default function BrowserNotifications() {
                 )}
                 Tes notifikasi
               </Button>
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={handleServerTest}
+                  disabled={busy}
+                  className="h-11 w-full rounded-xl border-[#81C3D7]/60 px-4 text-xs font-bold uppercase tracking-wider text-[#2F6690] disabled:opacity-50 md:w-auto"
+                >
+                  {busy ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Send className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  Tes push server
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={handleDisable}

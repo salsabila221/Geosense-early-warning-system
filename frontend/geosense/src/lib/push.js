@@ -56,10 +56,46 @@ async function getRegistration() {
     new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error("Service worker belum aktif. Muat ulang halaman lalu coba lagi.")),
-        8000
+        15000
       )
     ),
   ])
+}
+
+function sameApplicationServerKey(subscription, publicKey) {
+  try {
+    const current = subscription?.options?.applicationServerKey
+    if (!current) return false
+    const expected = urlBase64ToUint8Array(publicKey)
+    const actual = new Uint8Array(current)
+    if (actual.length !== expected.length) return false
+    for (let index = 0; index < actual.length; index += 1) {
+      if (actual[index] !== expected[index]) return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function fetchPublicKey() {
+  let response
+  try {
+    response = await apiFetch("/api/push/public-key", { auth: false })
+  } catch {
+    throw new Error(
+      "Tidak bisa menghubungi backend. Pastikan server GeoSense menyala dan URL API benar."
+    )
+  }
+
+  const { ok, data } = response
+  if (!ok || !data?.publicKey) {
+    throw new Error(data?.detail || "Kunci Web Push belum tersedia di server.")
+  }
+  if (data.enabled === false) {
+    throw new Error("Web Push belum diaktifkan di server.")
+  }
+  return data.publicKey
 }
 
 export async function getActiveSubscription() {
@@ -90,32 +126,53 @@ export async function enablePushNotifications() {
     )
   }
 
-  const { ok, data } = await apiFetch("/api/push/public-key", { auth: false })
-  if (!ok || !data?.publicKey) {
-    throw new Error(data?.detail || "Kunci Web Push belum tersedia di server.")
-  }
-  if (data.enabled === false) {
-    throw new Error("Web Push belum diaktifkan di server.")
+  const publicKey = await fetchPublicKey()
+  const registration = await getRegistration()
+  let existing = await registration.pushManager.getSubscription()
+
+  // Kalau subscription lama dibuat dengan VAPID key yang berbeda (mis. setelah
+  // key server diganti), push akan ditolak 403. Buang dan subscribe ulang.
+  if (existing && !sameApplicationServerKey(existing, publicKey)) {
+    try {
+      await existing.unsubscribe()
+    } catch {
+      /* lanjut subscribe baru */
+    }
+    existing = null
   }
 
-  const registration = await getRegistration()
-  const existing = await registration.pushManager.getSubscription()
-  const subscription =
-    existing ||
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(data.publicKey),
-    }))
+  let subscription = existing
+  if (!subscription) {
+    try {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      })
+    } catch (error) {
+      if (error?.name === "NotAllowedError") {
+        throw new Error("Izin notifikasi ditolak browser. Aktifkan izin situs lalu coba lagi.")
+      }
+      if (error?.name === "AbortError") {
+        throw new Error("Langganan push dibatalkan browser. Muat ulang halaman lalu coba lagi.")
+      }
+      throw new Error(error?.message || "Gagal membuat langganan push.")
+    }
+  }
 
   const payload = subscription.toJSON()
-  const saved = await apiFetch("/api/push/subscribe", {
-    method: "POST",
-    body: {
-      endpoint: payload.endpoint,
-      keys: payload.keys,
-      user_agent: navigator.userAgent,
-    },
-  })
+  let saved
+  try {
+    saved = await apiFetch("/api/push/subscribe", {
+      method: "POST",
+      body: {
+        endpoint: payload.endpoint,
+        keys: payload.keys,
+        user_agent: navigator.userAgent,
+      },
+    })
+  } catch {
+    throw new Error("Langganan dibuat, tetapi gagal dikirim ke backend. Cek koneksi API.")
+  }
 
   if (!saved.ok) {
     throw new Error(saved.data?.detail || "Gagal menyimpan langganan notifikasi.")
@@ -140,13 +197,24 @@ export async function disablePushNotifications() {
 }
 
 export async function showTestNotification() {
-  const registration = await getRegistration()
+  if (!isPushSupported()) {
+    throw new Error("Browser ini tidak mendukung notifikasi.")
+  }
+  if (Notification.permission !== "granted") {
+    throw new Error("Izin notifikasi belum diberikan. Aktifkan notifikasi dulu.")
+  }
 
-  await registration.showNotification("Tes Notifikasi GeoSense", {
-    body: "Notifikasi browser berhasil diaktifkan. Peringatan status akan muncul di sini.",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/badge-96.png",
-    tag: "geosense-test",
-    data: { url: "/" },
-  })
+  const registration = await getRegistration()
+  try {
+    await registration.showNotification("Tes Notifikasi GeoSense", {
+      body: "Notifikasi browser berhasil diaktifkan. Peringatan status akan muncul di sini.",
+      icon: "/icons/geosense-icon-192.png",
+      badge: "/icons/badge-96.png",
+      tag: "geosense-test",
+      renotify: true,
+      data: { url: "/" },
+    })
+  } catch (error) {
+    throw new Error(error?.message || "Browser gagal menampilkan notifikasi tes.")
+  }
 }
