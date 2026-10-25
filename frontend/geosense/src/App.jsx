@@ -498,7 +498,7 @@ export default function App() {
         </section>
 
         {/* ================= NOTIFIKASI BROWSER (SEMUA ROLE) ================= */}
-        <BrowserNotifications />
+        <BrowserNotifications isAdmin={isAdmin} />
 
         {/* ================= PANDUAN & NOMOR DARURAT (USER & GUEST) ================= */}
         {!isAdmin && (

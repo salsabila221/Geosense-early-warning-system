@@ -15,19 +15,19 @@
   "categories": ["utilities", "weather", "education"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/geosense-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/geosense-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-maskable-512.png",
+      "src": "/icons/geosense-icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -38,13 +38,13 @@
       "name": "Panduan Tanggap Bencana",
       "short_name": "Panduan",
       "url": "/#panduan",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/geosense-icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Nomor Darurat",
       "short_name": "Darurat",
       "url": "/#nomor-darurat",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/geosense-icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

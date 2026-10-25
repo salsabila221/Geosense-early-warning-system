@@ -1,13 +1,13 @@
 /* GeoSense service worker: app shell caching + Web Push notifications. */
 
-const CACHE_NAME = "geosense-shell-v2"
+const CACHE_NAME = "geosense-shell-v3"
 const APP_SHELL = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-maskable-512.png",
+  "/icons/geosense-icon-192.png",
+  "/icons/geosense-icon-512.png",
+  "/icons/geosense-icon-maskable-512.png",
   "/icons/badge-96.png",
 ]
 
@@ -141,7 +141,7 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "GeoSense"
   const options = {
     body: payload.body || "Ada pembaruan status dari GeoSense.",
-    icon: payload.icon || "/icons/icon-192.png",
+    icon: payload.icon || "/icons/geosense-icon-192.png",
     badge: payload.badge || "/icons/badge-96.png",
     tag: payload.tag || "geosense-status",
     renotify: true,
@@ -184,7 +184,7 @@ self.addEventListener("message", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "GeoSense", {
       body: payload.body || "Notifikasi browser GeoSense berfungsi.",
-      icon: "/icons/icon-192.png",
+      icon: "/icons/geosense-icon-192.png",
       badge: "/icons/badge-96.png",
       tag: payload.tag || "geosense-test",
       data: { url: payload.url || "/" },
