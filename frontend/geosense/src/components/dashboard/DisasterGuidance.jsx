@@ -1,12 +1,12 @@
 import {
-  Backpack,
   BookOpen,
+  Droplets,
   Eye,
-  Info,
   Radio,
   Route,
   ShieldCheck,
   Siren,
+  Sprout,
   TriangleAlert,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -21,39 +21,39 @@ const STATUS_ICON = {
 const STEPS = [
   {
     icon: Eye,
-    title: "Kenali tanda-tanda awal",
+    title: "Kenali risiko dan tanda awal",
     body:
-      "Tanah retak memanjang, pohon atau tiang listrik miring, air mendadak keruh, dan getaran berulang adalah indikasi pergerakan tanah.",
+      "Longsor dipicu curah hujan tinggi, lereng terjal, tanah tebal/kurang padat, pengikisan, vegetasi berkurang, dan getaran. Waspadai retakan tanah, pohon atau tiang miring, air mendadak keruh, dan suara gemuruh.",
   },
   {
-    icon: Backpack,
-    title: "Siapkan tas siaga",
+    icon: Droplets,
+    title: "Jaga drainase dan tutup rekahan",
     body:
-      "Simpan dokumen penting, obat pribadi, senter, powerbank, air minum, dan uang tunai di tas yang mudah dijangkau.",
+      "Pastikan selokan mengalirkan air keluar lereng dan tidak tersumbat. Tutup rekahan di atas lereng agar air hujan tidak cepat meresap ke dalam tanah.",
   },
   {
-    icon: ShieldCheck,
-    title: "Lindungi diri saat getaran terjadi",
+    icon: Sprout,
+    title: "Hijaukan dan perkuat lereng",
     body:
-      "Jauhi lereng, tebing, dan bangunan yang retak. Lindungi kepala, tetap tenang, dan jangan berlarian tanpa arah.",
+      "Tanam vegetasi berakar kuat dan dalam (nangka, durian, pete, kaliandra, vetiver), buat terasering, tanggul/bangunan penahan, serta fondasi yang kuat. Hindari bangunan permanen di tebing atau tanah gerak.",
   },
   {
     icon: Route,
-    title: "Evakuasi secara terarah",
+    title: "Siapkan rencana evakuasi",
     body:
-      "Ikuti jalur evakuasi resmi menuju titik kumpul. Dahulukan anak, lansia, ibu hamil, dan penyandang disabilitas.",
+      "Kenali jalur dan zona evakuasi, siapkan tas siaga serta dokumen penting, dan pantau informasi resmi BNPB/BPBD saat curah hujan tinggi.",
+  },
+  {
+    icon: Siren,
+    title: "Saat longsor terjadi",
+    body:
+      "Segera evakuasi menjauhi suara gemuruh dan arah datangnya longsoran. Jauhi wilayah longsor karena tanah masih labil; ikuti sirene menuju zona evakuasi yang telah ditentukan.",
   },
   {
     icon: Radio,
-    title: "Setelah kejadian",
+    title: "Setelah longsor",
     body:
-      "Jauhi area longsor karena berpotensi longsor susulan. Laporkan korban atau kerusakan ke BPBD dan pantau info resmi.",
-  },
-  {
-    icon: Info,
-    title: "Saring informasi",
-    body:
-      "Percaya hanya pada dashboard GeoSense, BPBD, dan kanal resmi pemerintah. Jangan sebarkan kabar yang belum terverifikasi.",
+      "Waspadai longsor susulan saat hujan. Ikuti instruksi petugas dan jangan kembali sebelum area dinyatakan aman. Hubungi BPBD atau 112 bila ada korban.",
   },
 ]
 
@@ -73,11 +73,11 @@ export default function DisasterGuidance({ status = "Aman" }) {
             Panduan Tanggap Bencana
           </h3>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-            Langkah sederhana yang bisa dilakukan sebelum, saat, dan setelah terjadi pergerakan tanah.
+            Ringkasan langkah BNPB untuk menghadapi tanah longsor dan gerakan tanah.
           </p>
         </div>
         <Badge variant="secondary" className="h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-          Edukasi
+          Sumber: BNPB
         </Badge>
       </div>
 
@@ -125,6 +125,17 @@ export default function DisasterGuidance({ status = "Aman" }) {
               </article>
             )
           })}
+        </div>
+
+        <div className="border-t border-border/60 pt-4 text-[11px] text-muted-foreground sm:text-right">
+          <a
+            href="https://bnpb.go.id"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-primary hover:underline"
+          >
+            Sumber: BNPB — Tanggap Tangkas Tangguh Menghadapi Bencana (2019), hlm. 40–44
+          </a>
         </div>
       </div>
     </section>
