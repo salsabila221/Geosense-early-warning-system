@@ -64,19 +64,19 @@ export default function DisasterGuidance({ status = "Aman" }) {
   return (
     <section
       id="panduan"
-      className="mt-8 scroll-mt-32 rounded-2xl bg-white border border-[#D9DCD6]/30 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden"
+      className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
     >
-      <div className="flex flex-col gap-3 border-b border-[#D9DCD6]/40 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
-          <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-[#3A7CA5]" aria-hidden="true" />
+          <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
+            <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
             Panduan Tanggap Bencana
           </h3>
-          <p className="mt-0.5 text-xs font-medium text-[#2F6690]">
+          <p className="mt-0.5 text-xs font-medium text-muted-foreground">
             Langkah sederhana yang bisa dilakukan sebelum, saat, dan setelah terjadi pergerakan tanah.
           </p>
         </div>
-        <Badge className="w-fit bg-[#81C3D7]/20 text-[#2F6690] border border-[#81C3D7]/40 shadow-none px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+        <Badge variant="secondary" className="h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider text-primary">
           Edukasi
         </Badge>
       </div>
@@ -106,20 +106,20 @@ export default function DisasterGuidance({ status = "Aman" }) {
             return (
               <article
                 key={step.title}
-                className="group rounded-xl border border-[#D9DCD6]/50 bg-white p-4 transition-colors hover:border-[#81C3D7]/60 hover:bg-slate-50/60"
+                className="group rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
               >
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#81C3D7]/20 text-[#2F6690] transition-colors group-hover:bg-[#3A7CA5] group-hover:text-white">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold text-[#2F6690]">
+                      <span className="font-mono text-[10px] font-bold text-primary">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <h4 className="text-sm font-bold text-[#16425B] break-words">{step.title}</h4>
+                      <h4 className="break-words text-sm font-bold text-foreground">{step.title}</h4>
                     </div>
-                    <p className="mt-1 text-xs leading-relaxed text-[#16425B]/80">{step.body}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
                   </div>
                 </div>
               </article>

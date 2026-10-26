@@ -60,19 +60,19 @@ export default function EmergencyContacts() {
   return (
     <section
       id="nomor-darurat"
-      className="mt-8 scroll-mt-32 rounded-2xl bg-white border border-[#D9DCD6]/30 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden"
+      className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
     >
-      <div className="flex flex-col gap-3 border-b border-[#D9DCD6]/40 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
-          <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
-            <PhoneCall className="h-4 w-4 text-[#3A7CA5]" aria-hidden="true" />
+          <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
+            <PhoneCall className="h-4 w-4 text-primary" aria-hidden="true" />
             Nomor Darurat
           </h3>
-          <p className="mt-0.5 text-xs font-medium text-[#2F6690]">
+          <p className="mt-0.5 text-xs font-medium text-muted-foreground">
             Klik kartu untuk langsung menghubungi layanan darurat dari perangkat kamu.
           </p>
         </div>
-        <Badge className="w-fit bg-red-50 text-red-700 border border-red-200 shadow-none px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+        <Badge variant="destructive" className="h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider">
           Siaga 24 Jam
         </Badge>
       </div>
@@ -85,16 +85,16 @@ export default function EmergencyContacts() {
               <a
                 key={contact.name}
                 href={`tel:${contact.tel}`}
-                className={`group flex flex-col justify-between rounded-xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50 ${
+                className={`group flex flex-col justify-between rounded-xl border p-4 transition-all hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
                   contact.featured
-                    ? "border-[#3A7CA5]/40 bg-[#16425B] text-white hover:bg-[#16425B]/95"
-                    : "border-[#D9DCD6]/60 bg-white text-[#16425B] hover:border-[#81C3D7]/70"
+                    ? "border-brand-primary/30 bg-brand-dark text-white shadow-sm hover:bg-brand-dark/95 hover:shadow-md"
+                    : "border-border/70 bg-card text-foreground shadow-sm hover:border-primary/40 hover:shadow-md"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <span
                     className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
-                      contact.featured ? "bg-white/15 text-white" : "bg-[#81C3D7]/20 text-[#2F6690]"
+                      contact.featured ? "bg-white/15 text-white" : "bg-secondary text-primary"
                     }`}
                   >
                     <Icon className="h-5 w-5" aria-hidden="true" />
@@ -103,7 +103,7 @@ export default function EmergencyContacts() {
                     className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
                       contact.featured
                         ? "bg-white/15 text-white"
-                        : "bg-slate-100 text-[#2F6690] group-hover:bg-[#3A7CA5] group-hover:text-white"
+                        : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                     }`}
                   >
                     <PhoneCall className="h-3 w-3" aria-hidden="true" />
@@ -112,19 +112,19 @@ export default function EmergencyContacts() {
                 </div>
 
                 <div className="mt-4">
-                  <p className={`break-words text-sm font-bold ${contact.featured ? "text-white" : "text-[#16425B]"}`}>
+                  <p className={`break-words text-sm font-bold ${contact.featured ? "text-white" : "text-foreground"}`}>
                     {contact.name}
                   </p>
                   <p
-                    className={`mt-0.5 font-mono text-lg font-bold tracking-tight ${
-                      contact.featured ? "text-[#81C3D7]" : "text-[#2F6690]"
+                    className={`mt-1 font-mono text-2xl font-bold tracking-tight tabular-nums sm:text-3xl ${
+                      contact.featured ? "text-brand-light" : "text-primary"
                     }`}
                   >
                     {contact.number}
                   </p>
                   <p
                     className={`mt-2 text-[11px] leading-relaxed ${
-                      contact.featured ? "text-white/80" : "text-[#16425B]/80"
+                      contact.featured ? "text-white/80" : "text-muted-foreground"
                     }`}
                   >
                     {contact.description}

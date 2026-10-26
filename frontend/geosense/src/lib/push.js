@@ -1,7 +1,7 @@
 // Helper Web Push untuk PWA GeoSense.
 // Alur: minta izin -> subscribe PushManager -> kirim subscription ke backend.
 
-import { apiFetch } from "@/lib/api"
+import { API_URL, apiFetch } from "@/lib/api"
 
 export function isPushSupported() {
   return (
@@ -84,7 +84,7 @@ async function fetchPublicKey() {
     response = await apiFetch("/api/push/public-key", { auth: false })
   } catch {
     throw new Error(
-      "Tidak bisa menghubungi backend. Pastikan server GeoSense menyala dan URL API benar."
+      `Tidak bisa menghubungi backend (${API_URL}). Pastikan server GeoSense menyala dan URL API benar.`
     )
   }
 
