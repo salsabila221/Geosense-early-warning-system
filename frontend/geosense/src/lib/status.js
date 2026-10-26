@@ -14,7 +14,7 @@ export const STATUS_META = {
     description:
       "Seluruh infrastruktur node sensor telemetri beroperasi normal tanpa anomali.",
     guidance:
-      "Kondisi aman. Gunakan waktu ini untuk mengenali jalur evakuasi, menyiapkan tas siaga, dan menyimpan nomor darurat.",
+      "Kondisi aman. Gunakan waktu ini untuk memeriksa drainase dan rekahan lereng, mengenali jalur evakuasi, serta menyiapkan tas siaga.",
     badgeBg: "",
     badgeColor: "#047857",
     cardBg: "bg-emerald-50/90 border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.15)]",
@@ -30,7 +30,7 @@ export const STATUS_META = {
     description:
       "Waspada! Terdeteksi peningkatan getaran mikro frekuensi rendah pada struktur tanah.",
     guidance:
-      "Tingkatkan kewaspadaan. Jauhi lereng dan tebing, siapkan dokumen penting, pantau informasi resmi, dan bersiap evakuasi bila getaran meningkat.",
+      "Tingkatkan kewaspadaan. Jauhi lereng dan tebing, pantau informasi resmi BNPB/BPBD, dan siapkan evakuasi bila getaran atau hujan meningkat.",
     badgeBg: "",
     badgeColor: "#B45309",
     cardBg: "bg-amber-50/90 border-amber-500 shadow-[0_4px_20px_rgba(245,158,11,0.15)]",
@@ -46,7 +46,7 @@ export const STATUS_META = {
     description:
       "BAHAYA! Pergeseran tanah masif terdeteksi. Sinyal darurat dikirim otomatis ke WhatsApp pengguna terdaftar.",
     guidance:
-      "Segera evakuasi ke titik kumpul yang aman. Jangan kembali sebelum area dinyatakan aman oleh petugas. Hubungi 112 atau BPBD bila ada korban.",
+      "Segera evakuasi menjauhi arah longsoran atau suara gemuruh menuju zona evakuasi. Jangan kembali sebelum area dinyatakan aman. Hubungi 112/BPBD bila ada korban.",
     badgeBg: "animate-pulse",
     badgeColor: "#B91C1C",
     cardBg: "bg-red-50/90 border-red-500 shadow-[0_4px_20px_rgba(239,68,68,0.15)]",
