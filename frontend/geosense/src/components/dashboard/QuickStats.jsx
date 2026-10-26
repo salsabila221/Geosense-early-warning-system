@@ -22,15 +22,15 @@ export default function QuickStats() {
       {stats.map((item) => (
         <Card
           key={item.title}
-          className="border border-brand-border shadow-sm"
+          className="border border-border/70 shadow-sm"
         >
           <CardContent className="p-6">
 
-            <p className="text-sm text-brand-secondary">
+            <p className="text-sm text-muted-foreground">
               {item.title}
             </p>
 
-            <h3 className="mt-2 text-3xl font-bold text-brand-dark">
+            <h3 className="mt-2 text-3xl font-bold text-foreground">
               {item.value}
             </h3>
 

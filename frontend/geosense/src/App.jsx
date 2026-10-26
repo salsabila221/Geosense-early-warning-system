@@ -369,7 +369,7 @@ export default function App() {
 
   if (isRestoringSession) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F4F6F8] text-sm font-semibold text-[#3A7CA5]">
+      <div className="flex min-h-screen items-center justify-center bg-background text-sm font-semibold text-primary">
         Memeriksa sesi login...
       </div>
     )
@@ -386,7 +386,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] font-sans text-[#16425B] antialiased selection:bg-[#81C3D7]/30">
+    <div className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-brand-light/30">
       
       <Header 
         isLoggedIn={isLoggedIn} 
@@ -396,7 +396,7 @@ export default function App() {
         onLogout={handleLogout} 
       />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 pt-[calc(9rem+env(safe-area-inset-top))] pb-12">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-[calc(7rem+env(safe-area-inset-top))] sm:px-6">
         
         <HeroSection
           status={systemStatus}
@@ -410,7 +410,7 @@ export default function App() {
         {isLoggedIn && isAdmin && (
           <section
             id="kontrol"
-            className="mb-6 flex scroll-mt-32 flex-col gap-4 rounded-2xl border border-[#D9DCD6]/30 bg-white p-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] sm:p-5 md:flex-row md:items-center md:justify-between"
+            className="mb-6 flex scroll-mt-32 flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-sm sm:p-5 md:flex-row md:items-center md:justify-between"
           >
             <div>
               <h4 className="text-sm font-bold uppercase tracking-wider text-[#16425B] flex items-center gap-2">
@@ -512,9 +512,9 @@ export default function App() {
         {isLoggedIn && isAdmin && (
           <section
             id="pengguna"
-            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
           >
-            <div className="border-b border-[#D9DCD6]/40 bg-slate-50/50 p-4 sm:p-6">
+            <div className="border-b border-border/60 bg-muted/40 p-4 sm:p-6">
               <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
                 <Users className="h-4 w-4 text-[#3A7CA5]" aria-hidden="true" />
                 User Management
@@ -526,14 +526,14 @@ export default function App() {
             <div className="overflow-x-auto p-4 sm:p-6">
               <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[#D9DCD6]/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
+                  <tr className="border-b border-border/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
                     <th className="pb-3 pl-2">Nama</th>
                     <th className="pb-3">Email</th>
                     <th className="pb-3">Nomor WhatsApp</th>
                     <th className="pb-3 pr-2">Role</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D9DCD6]/30 text-[#16425B]">
+                <tbody className="divide-y divide-border/60 text-[#16425B]">
                   {users.length === 0 && (
                     <tr>
                       <td colSpan={4} className="py-6 text-center text-xs text-slate-400">
@@ -559,9 +559,9 @@ export default function App() {
         {isLoggedIn && isAdmin && (
           <section
             id="riwayat"
-            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
           >
-            <div className="border-b border-[#D9DCD6]/40 bg-slate-50/50 p-4 sm:p-6">
+            <div className="border-b border-border/60 bg-muted/40 p-4 sm:p-6">
               <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
                 <History className="h-4 w-4 text-[#3A7CA5]" aria-hidden="true" />
                 Riwayat Perubahan Status
@@ -573,7 +573,7 @@ export default function App() {
             <div className="overflow-x-auto p-4 sm:p-6">
               <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-[#D9DCD6]/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
+                  <tr className="border-b border-border/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
                     <th className="pb-3 pl-2">Waktu (WIB)</th>
                     <th className="pb-3">Status</th>
                     <th className="pb-3">Sumber</th>
@@ -581,7 +581,7 @@ export default function App() {
                     <th className="pb-3 pr-2">Detail</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#D9DCD6]/30 text-[#16425B]">
+                <tbody className="divide-y divide-border/60 text-[#16425B]">
                   {statusHistory.length === 0 && (
                     <tr>
                       <td colSpan={5} className="py-6 text-center text-xs text-slate-400">
@@ -653,9 +653,9 @@ export default function App() {
         {isLoggedIn && isAdmin && (
           <section
             id="whatsapp"
-            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+            className="mt-8 scroll-mt-32 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
           >
-            <div className="flex flex-col gap-3 border-b border-[#D9DCD6]/40 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
               <div>
                 <h3 className="text-base font-bold text-[#16425B] flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-[#3A7CA5]" aria-hidden="true" />
@@ -736,7 +736,7 @@ export default function App() {
                     value={waTestPhone}
                     onChange={(event) => setWaTestPhone(event.target.value)}
                     placeholder="08123456789"
-                    className="w-full rounded-xl border border-[#D9DCD6]/60 px-3.5 py-2.5 text-sm text-[#16425B] outline-none focus:ring-2 focus:ring-[#3A7CA5]/40"
+                    className="w-full rounded-xl border border-border/60 px-3.5 py-2.5 text-sm text-[#16425B] outline-none focus:ring-2 focus:ring-[#3A7CA5]/40"
                   />
                 </div>
                 <button
@@ -752,7 +752,7 @@ export default function App() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[#D9DCD6]/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
+                    <tr className="border-b border-border/60 text-[#3A7CA5] text-xs font-bold uppercase tracking-wider">
                       <th className="pb-3 pl-2">Waktu (WIB)</th>
                       <th className="pb-3">Nomor</th>
                       <th className="pb-3">Status</th>
@@ -760,7 +760,7 @@ export default function App() {
                       <th className="pb-3 pr-2">Hasil</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#D9DCD6]/30 text-[#16425B]">
+                  <tbody className="divide-y divide-border/60 text-[#16425B]">
                     {waLogs.length === 0 && (
                       <tr>
                         <td colSpan={5} className="py-6 text-center text-xs text-slate-400">

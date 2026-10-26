@@ -1,5 +1,6 @@
 import { Activity } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { getStatusMeta } from "@/lib/status"
 
 export default function HeroSection({ status = "Aman", lastUpdated, roleLabel = "Monitoring Dashboard" }) {
@@ -7,51 +8,62 @@ export default function HeroSection({ status = "Aman", lastUpdated, roleLabel = 
 
   return (
     <section id="dashboard" className="mb-8 scroll-mt-32">
-      <div className="flex flex-col gap-6 overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:p-8">
-        
-        {/* LEFT TEXT */}
+      <div className="flex flex-col gap-6 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-8">
+        {/* Teks utama */}
         <div className="min-w-0 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#81C3D7]/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#2F6690] sm:text-xs">
+          <Badge
+            variant="secondary"
+            className="h-7 gap-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary"
+          >
             <Activity className="h-3.5 w-3.5" aria-hidden="true" />
             {roleLabel}
-          </span>
-          <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#16425B] sm:text-3xl md:text-4xl lg:text-5xl">
-            Sistem Peringatan <br />
-            <span className="text-lg font-semibold text-[#3A7CA5] sm:text-2xl md:text-3xl">Pergerakan Tanah</span>
+          </Badge>
+
+          <h2 className="mt-4 max-w-2xl text-balance text-3xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            Sistem Peringatan <span className="text-primary">Pergerakan Tanah</span>
           </h2>
-          <p className="mt-4 text-sm leading-relaxed text-[#16425B]/80 sm:text-base">
+
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             Pemantauan kondisi kestabilan tanah secara real-time berbasis jaringan sensor telemetri
             untuk mendeteksi getaran dan pergerakan tanah, lalu mengirimkan peringatan setelah
             indikasi pergerakan terdeteksi.
           </p>
         </div>
 
-        {/* RIGHT STATUS */}
-        <div className={`flex min-h-[160px] w-full flex-col justify-between rounded-xl border-2 p-4 transition-all duration-300 sm:p-5 lg:max-w-xs ${meta.cardBg}`}>
-          <div>
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold uppercase tracking-widest ${meta.textColor}`}>
-                Status Sistem
-              </span>
-              <Badge
-                className={`pointer-events-none rounded-md px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-md ${meta.badgeBg}`}
-                style={{ backgroundColor: meta.badgeColor }}
-              >
-                {meta.label}
-              </Badge>
-            </div>
-            <p className={`mt-3 text-xs font-medium leading-relaxed ${meta.descColor}`}>
-              {meta.description}
-            </p>
-          </div>
-          
-          {/* Bagian Pembaruan Terakhir sekarang merender data prop yang dinamis */}
-          <div className={`mt-5 pt-4 border-t flex items-center justify-between gap-3 text-[11px] ${meta.borderTop}`}>
-            <span className={`font-bold uppercase tracking-wider ${meta.textColor}/60`}>Pembaruan Terakhir</span>
-            <span className={`font-bold text-right ${meta.textColor}`}>{lastUpdated}</span>
-          </div>
-        </div>
+        {/* Status sistem */}
+        <Card className="w-full gap-0 border-border/70 py-0 shadow-sm lg:max-w-xs">
+          <CardContent className="flex min-h-[160px] flex-col justify-between p-5">
+            <div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: meta.badgeColor }}
+                    aria-hidden="true"
+                  />
+                  Status Sistem
+                </span>
+                <Badge
+                  className={`h-6 px-2.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${meta.badgeBg}`}
+                  style={{ backgroundColor: meta.badgeColor }}
+                >
+                  {meta.label}
+                </Badge>
+              </div>
 
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                {meta.description}
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-1 border-t border-border pt-4 text-[11px]">
+              <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+                Pembaruan Terakhir
+              </span>
+              <span className="font-semibold text-foreground">{lastUpdated}</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   )

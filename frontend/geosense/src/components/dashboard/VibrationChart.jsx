@@ -141,15 +141,15 @@ export default function VibrationChart({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-      <div className="flex min-h-20 flex-shrink-0 flex-col gap-3 border-b border-[#D9DCD6]/40 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+      <div className="flex min-h-20 flex-shrink-0 flex-col gap-3 border-b border-border/60 bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-[#16425B] sm:text-base">
+          <h3 className="text-sm font-bold text-foreground sm:text-base">
             Getaran 3 Node Geofon
           </h3>
-          <p className="mt-0.5 text-[11px] font-medium text-[#2F6690] sm:text-xs">
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
             p2p maksimum:{" "}
-            <span className="font-bold text-[#16425B]">
+            <span className="font-bold text-foreground">
               {formatMetric(vibration)} {metricUnit}
             </span>
             {eventNode
@@ -161,7 +161,7 @@ export default function VibrationChart({
                 : " | menunggu stream processing"}
           </p>
         </div>
-        <Badge className="inline-flex flex-shrink-0 items-center gap-1.5 border border-[#81C3D7]/40 bg-[#81C3D7]/20 px-2.5 py-0.5 text-[#2F6690] shadow-none">
+        <Badge variant="secondary" className="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 text-[10px] font-semibold text-primary shadow-none">
           <Radio className="h-3 w-3" />
           {hasNodeSignals ? "3 Node Live" : "Menunggu Data"}
         </Badge>

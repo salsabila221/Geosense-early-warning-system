@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 const NAV_ITEMS = {
   admin: [
@@ -100,9 +101,11 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
   }
 
   const roleBadge = isLoggedIn ? (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-        isAdmin ? "bg-[#16425B] text-white" : "bg-[#81C3D7]/25 text-[#2F6690]"
+    <Badge
+      className={`h-6 gap-1.5 px-2.5 text-[10px] font-bold uppercase tracking-wider ${
+        isAdmin
+          ? "bg-brand-dark text-white"
+          : "bg-secondary text-secondary-foreground"
       }`}
     >
       {isAdmin ? (
@@ -111,34 +114,39 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
         <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
       )}
       {isAdmin ? "Admin" : "User"}
-    </span>
+    </Badge>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2F6690]">
+    <Badge
+      variant="outline"
+      className="h-6 gap-1.5 border-border/80 bg-muted/60 px-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+    >
       <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
       Mode Tamu
-    </span>
+    </Badge>
   )
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[9999] bg-[#16425B] pt-[env(safe-area-inset-top)]">
-      <div className="border-b border-[#2F6690]/20 bg-[#16425B] text-[#D9DCD6]">
-        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between gap-3 px-4 text-[10px] font-medium tracking-wide sm:px-6 sm:text-xs">
-          <span className="truncate uppercase text-[#D9DCD6]/80">{date}</span>
+    <div className="fixed inset-x-0 top-0 z-[9999] pt-[env(safe-area-inset-top)]">
+      {/* Top bar ramping: hanya tanggal + jam */}
+      <div className="border-b border-white/10 bg-brand-dark text-white/65">
+        <div className="mx-auto flex h-6 max-w-7xl items-center justify-between gap-3 px-4 text-[10px] font-medium sm:px-6 sm:text-[11px]">
+          <span className="hidden truncate sm:inline">{date}</span>
           <div className="flex flex-shrink-0 items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-semibold tracking-wider text-white">{clock} WIB</span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="font-semibold tracking-wide text-white">{clock} WIB</span>
           </div>
         </div>
       </div>
 
-      <header className="relative bg-white/95 shadow-[0_2px_15px_rgba(0,0,0,0.02)] backdrop-blur-md">
-        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+      <header className="relative border-b border-border/60 bg-background/95 shadow-sm backdrop-blur-md">
+        <div className="mx-auto grid min-h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 py-2 sm:px-6">
+          {/* Logo */}
           <button
             type="button"
             onClick={goDashboard}
-            className="group flex min-h-11 min-w-0 items-center gap-3 rounded-xl text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50 sm:gap-4"
+            className="group col-start-1 flex min-h-11 min-w-0 items-center justify-self-start gap-3 rounded-xl text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:gap-3.5"
           >
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-[#81C3D7]/50 sm:h-14 sm:w-14">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-border/70 sm:h-12 sm:w-12">
               <img
                 src="/brand/geosense-mark.png"
                 alt=""
@@ -147,38 +155,44 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
               />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-extrabold tracking-tight text-[#16425B] sm:text-xl">
+              <h1 className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
                 Geosense
               </h1>
-              <p className="truncate text-[10px] font-medium uppercase tracking-wider text-[#2F6690] sm:text-xs">
+              <p className="truncate text-[11px] font-medium text-muted-foreground sm:text-xs">
                 Pemantauan Pergerakan Tanah
               </p>
             </div>
           </button>
 
-          <nav aria-label="Navigasi utama" className="hidden items-center gap-0.5 min-[1025px]:flex">
+          {/* Navigasi tengah */}
+          <nav
+            aria-label="Navigasi utama"
+            className="col-start-2 hidden items-center justify-center gap-1 min-[1025px]:flex"
+          >
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={(event) => handleNavLink(event, item.href)}
-                className="inline-flex min-h-11 items-center rounded-xl px-2.5 text-sm font-semibold text-[#2F6690] transition-colors hover:bg-[#81C3D7]/15 hover:text-[#16425B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50 xl:px-3"
+                className="inline-flex min-h-9 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <div className="hidden flex-shrink-0 items-center gap-2 min-[1025px]:flex">
+          {/* Auth kanan */}
+          <div className="col-start-3 hidden items-center justify-end gap-2 justify-self-end min-[1025px]:flex">
             {isLoggedIn ? (
               <>
                 {roleBadge}
-                <span className="hidden text-sm font-medium text-[#16425B] xl:inline">
-                  {getGreeting()}, <span className="font-bold text-[#2F6690]">{firstName}</span>
+                <span className="hidden text-xs font-medium text-muted-foreground xl:inline">
+                  {getGreeting()}, <span className="font-semibold text-foreground">{firstName}</span>
                 </span>
                 <Button
+                  variant="ghost"
                   onClick={onLogout}
-                  className="h-11 rounded-xl bg-red-600 px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-red-700"
+                  className="h-9 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
                   Logout
@@ -189,13 +203,13 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
                 {roleBadge}
                 <Button
                   variant="ghost"
-                  className="h-11 rounded-xl px-3 text-sm font-semibold text-[#2F6690] transition-all hover:bg-[#81C3D7]/10 hover:text-[#16425B]"
+                  className="h-9 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => onNavigate("signup")}
                 >
                   Sign Up
                 </Button>
                 <Button
-                  className="h-11 rounded-xl bg-[#2F6690] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2F6690]/10 transition-all hover:bg-[#16425B]"
+                  className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                   onClick={() => onNavigate("login")}
                 >
                   Login
@@ -210,7 +224,7 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
             aria-label={isMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-navigation"
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[#D9DCD6]/60 bg-white text-[#16425B] transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50 min-[1025px]:hidden"
+            className="col-start-3 flex h-10 w-10 flex-shrink-0 items-center justify-center justify-self-end rounded-lg border border-border/70 bg-card text-foreground shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 min-[1025px]:hidden"
           >
             {isMenuOpen ? (
               <X className="h-5 w-5" aria-hidden="true" />
@@ -224,10 +238,10 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
           id="mobile-navigation"
           className={`${
             isMenuOpen ? "block" : "hidden"
-          } absolute inset-x-0 top-full max-h-[calc(100vh-8rem)] overflow-y-auto border-t border-[#D9DCD6]/50 bg-white shadow-[0_18px_35px_rgba(22,66,91,0.16)] min-[1025px]:hidden`}
+          } absolute inset-x-0 top-full max-h-[calc(100vh-7rem)] overflow-y-auto border-t border-border/60 bg-card shadow-lg min-[1025px]:hidden`}
         >
           <nav aria-label="Navigasi seluler" className="mx-auto grid max-w-7xl gap-1 px-4 py-3 sm:px-6">
-            <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-[#2F6690]/70">
+            <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Navigasi
             </p>
             {navItems.map((item) => (
@@ -235,30 +249,31 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
                 key={item.href}
                 href={item.href}
                 onClick={(event) => handleNavLink(event, item.href)}
-                className="flex min-h-11 w-full items-center rounded-xl px-3 text-sm font-semibold text-[#2F6690] transition-colors hover:bg-[#81C3D7]/15 hover:text-[#16425B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3A7CA5]/50"
+                className="flex min-h-11 w-full items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <div className="mx-auto max-w-7xl border-t border-[#D9DCD6]/50 px-4 py-4 sm:px-6">
+          <div className="mx-auto max-w-7xl border-t border-border/60 px-4 py-4 sm:px-6">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               {roleBadge}
               {isLoggedIn && (
-                <span className="text-xs font-medium text-[#16425B]">
-                  {getGreeting()}, <span className="font-bold text-[#2F6690]">{firstName}</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {getGreeting()}, <span className="font-semibold text-foreground">{firstName}</span>
                 </span>
               )}
             </div>
 
             {isLoggedIn ? (
               <Button
+                variant="outline"
                 onClick={() => {
                   closeMenu()
                   onLogout()
                 }}
-                className="h-11 w-full rounded-xl bg-red-600 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-red-700"
+                className="h-11 w-full rounded-lg border-border text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Logout
@@ -266,8 +281,8 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
             ) : (
               <div className="grid gap-2">
                 <Button
-                  variant="ghost"
-                  className="h-11 w-full rounded-xl border border-[#D9DCD6]/70 text-sm font-semibold text-[#2F6690] transition-all hover:bg-[#81C3D7]/10 hover:text-[#16425B]"
+                  variant="outline"
+                  className="h-11 w-full rounded-lg border-border text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
                   onClick={() => {
                     closeMenu()
                     onNavigate("signup")
@@ -276,7 +291,7 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
                   Sign Up
                 </Button>
                 <Button
-                  className="h-11 w-full rounded-xl bg-[#2F6690] text-sm font-semibold text-white shadow-sm shadow-[#2F6690]/10 transition-all hover:bg-[#16425B]"
+                  className="h-11 w-full rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                   onClick={() => {
                     closeMenu()
                     onNavigate("login")

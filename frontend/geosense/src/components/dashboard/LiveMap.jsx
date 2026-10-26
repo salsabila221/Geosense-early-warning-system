@@ -86,22 +86,23 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
   )
 
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-      <div className="flex min-h-20 flex-shrink-0 items-center justify-between gap-3 border-b border-[#D9DCD6]/40 bg-slate-50/50 px-4 py-3 sm:h-20 sm:px-6 sm:py-0">
+    <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+      <div className="flex min-h-20 flex-shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-muted/40 px-4 py-3 sm:h-20 sm:px-6 sm:py-0">
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-[#16425B] sm:text-base">Peta Sebaran Node</h3>
-          <p className="mt-0.5 text-[11px] font-medium text-[#2F6690] sm:text-xs">
+          <h3 className="text-sm font-bold text-foreground sm:text-base">Peta Sebaran Node</h3>
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground sm:text-xs">
             {isAdmin
               ? "Titik presisi node mengikuti koordinat GPS yang dikirim alat"
               : "Area jangkauan pemantauan sistem tanpa titik presisi node"}
           </p>
         </div>
         <Badge
+          variant="secondary"
           className={`${
             isAdmin
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-blue-200 bg-blue-50 text-blue-700"
-          } pointer-events-none flex-shrink-0 border px-2 py-1 font-semibold shadow-none sm:px-3`}
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-blue-50 text-blue-700"
+          } pointer-events-none flex-shrink-0 px-2.5 text-[10px] font-semibold shadow-none sm:px-3`}
         >
           {isAdmin ? (
             <>
@@ -118,7 +119,7 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
       </div>
 
       <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <div className="h-full min-h-[380px] flex-1 overflow-hidden rounded-xl border border-[#D9DCD6]/50 shadow-inner">
+        <div className="h-full min-h-[380px] flex-1 overflow-hidden rounded-xl border border-border/60 shadow-inner">
           <MapContainer
             center={center}
             zoom={13}

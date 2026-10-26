@@ -9,6 +9,8 @@ import {
   Smartphone,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { apiFetch } from "@/lib/api"
 import {
   disablePushNotifications,
@@ -139,15 +141,15 @@ export default function BrowserNotifications({ isAdmin = false }) {
   }
 
   return (
-    <section
+    <Card
       id="notifikasi"
-      className="mt-6 scroll-mt-32 overflow-hidden rounded-2xl border border-[#D9DCD6]/30 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+      className="mt-6 scroll-mt-32 gap-3 border-border/70 py-6 shadow-sm [--card-spacing:1.5rem]"
     >
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <span
-            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
-              subscribed ? "bg-emerald-600 text-white" : "bg-[#81C3D7]/20 text-[#2F6690]"
+            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${
+              subscribed ? "bg-emerald-600 text-white" : "bg-secondary text-primary"
             }`}
           >
             {subscribed ? (
@@ -157,26 +159,27 @@ export default function BrowserNotifications({ isAdmin = false }) {
             )}
           </span>
           <div>
-            <p className="text-sm font-bold text-[#16425B]">Notifikasi Browser</p>
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#16425B]/80">
+            <h3 className="text-base font-bold text-foreground">Notifikasi Browser</h3>
+            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
               Terima peringatan Siaga / Warning langsung di perangkat, tanpa harus membuka WhatsApp.
               Notifikasi tetap muncul saat aplikasi sedang ditutup selama browser mengizinkan.
             </p>
           </div>
         </div>
 
-        <span
-          className={`inline-flex w-fit items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-            subscribed ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+        <Badge
+          variant={subscribed ? "default" : "secondary"}
+          className={`h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider ${
+            subscribed ? "bg-emerald-600 text-white shadow-none" : "text-muted-foreground"
           }`}
         >
           {subscribed ? "Aktif" : "Belum aktif"}
-        </span>
-      </div>
+        </Badge>
+      </CardHeader>
 
-      <div className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+      <CardContent className="space-y-4">
         {!supported && (
-          <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3.5">
             <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" aria-hidden="true" />
             <p className="text-[11px] leading-relaxed text-amber-800">
               Browser ini belum mendukung Web Push. Gunakan Chrome, Edge, atau Safari terbaru.
@@ -185,7 +188,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
         )}
 
         {iosNeedsInstall && supported && (
-          <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3.5">
+          <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3.5">
             <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600" aria-hidden="true" />
             <p className="text-[11px] leading-relaxed text-sky-800">
               Di iPhone/iPad, notifikasi hanya bisa aktif setelah GeoSense dipasang ke Layar Utama
@@ -195,7 +198,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
         )}
 
         {permission === "denied" && (
-          <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5">
+          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3.5">
             <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" aria-hidden="true" />
             <p className="text-[11px] leading-relaxed text-red-800">
               Izin notifikasi diblokir. Buka pengaturan situs di browser, izinkan notifikasi untuk
@@ -206,7 +209,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
 
         {message && (
           <div
-            className={`flex items-start gap-2 rounded-xl p-3.5 text-[11px] leading-relaxed ${
+            className={`flex items-start gap-2 rounded-lg p-3.5 text-[11px] leading-relaxed ${
               message.type === "ok"
                 ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border border-red-200 bg-red-50 text-red-800"
@@ -221,12 +224,12 @@ export default function BrowserNotifications({ isAdmin = false }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center">
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
           {!subscribed ? (
             <Button
               onClick={handleEnable}
               disabled={busy || !supported || iosNeedsInstall || permission === "denied"}
-              className="h-11 w-full rounded-xl bg-[#3A7CA5] px-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#2F6690] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+              className="h-11 w-full rounded-lg px-4 text-xs font-bold uppercase tracking-wider md:w-auto"
             >
               {busy ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -240,7 +243,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
               <Button
                 onClick={handleTest}
                 disabled={busy}
-                className="h-11 w-full rounded-xl bg-[#3A7CA5] px-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#2F6690] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                className="h-11 w-full rounded-lg px-4 text-xs font-bold uppercase tracking-wider md:w-auto"
               >
                 {busy ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -254,7 +257,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
                   variant="outline"
                   onClick={handleServerTest}
                   disabled={busy}
-                  className="h-11 w-full rounded-xl border-[#81C3D7]/60 px-4 text-xs font-bold uppercase tracking-wider text-[#2F6690] disabled:opacity-50 md:w-auto"
+                  className="h-11 w-full rounded-lg border-border px-4 text-xs font-bold uppercase tracking-wider text-foreground disabled:opacity-50 md:w-auto"
                 >
                   {busy ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -265,10 +268,10 @@ export default function BrowserNotifications({ isAdmin = false }) {
                 </Button>
               )}
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handleDisable}
                 disabled={busy}
-                className="h-11 w-full rounded-xl border-[#D9DCD6]/70 px-4 text-xs font-bold uppercase tracking-wider text-slate-600 disabled:opacity-50 md:w-auto"
+                className="h-11 w-full rounded-lg px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 md:w-auto"
               >
                 <BellOff className="h-4 w-4" aria-hidden="true" />
                 Matikan
@@ -276,7 +279,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
             </>
           )}
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
