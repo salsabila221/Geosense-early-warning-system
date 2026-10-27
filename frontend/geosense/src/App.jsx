@@ -308,7 +308,7 @@ export default function App() {
         method: "POST",
       })
       if (ok) {
-        alert("Pesan tes dikirim. Cek WhatsApp kamu (bisa butuh beberapa detik).")
+        alert("Pesan tes telah dikirim. Periksa WhatsApp Anda (mungkin membutuhkan beberapa detik).")
         setWaTestPhone("")
         loadWhatsapp()
       } else {
@@ -574,7 +574,7 @@ export default function App() {
                 Riwayat Perubahan Status
               </h3>
               <p className="text-xs text-[#3A7CA5] font-medium mt-0.5">
-                Setiap perubahan status dicatat sebagai baris baru — baik dari model ML maupun override admin.
+                Setiap perubahan status dicatat sebagai baris baru, baik dari model ML maupun override admin.
               </p>
             </div>
             <div className="overflow-x-auto p-4 sm:p-6">
@@ -673,7 +673,7 @@ export default function App() {
                 </p>
                 <p className="text-[11px] text-slate-500 mt-1">
                   "Diterima" berarti Fonnte sudah menerima pesan. Jika nomor penerima belum pernah chat ke nomor device,
-                  WhatsApp bisa menahan pesan (time-lock) — minta penerima kirim pesan apa saja ke nomor device sekali.
+                  WhatsApp dapat menahan pesan (time-lock). Mintalah penerima mengirim pesan apa saja ke nomor device satu kali.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 text-[11px] font-semibold">
@@ -725,7 +725,7 @@ export default function App() {
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-800">
                   <span className="font-bold">Device Fonnte terputus.</span> Status:{" "}
                   <code className="font-mono">{waDeviceStatus}</code>. Token dan kuota masih terbaca, tetapi
-                  WhatsApp tidak bisa mengirim sampai device tersambung lagi.
+                  WhatsApp tidak dapat mengirim sampai device tersambung kembali.
                   <div className="mt-1">
                     Buka dashboard Fonnte, lalu scan QR ulang dari ponsel nomor device sampai status
                     berubah menjadi <span className="font-semibold">Connected</span>.

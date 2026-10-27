@@ -40,7 +40,7 @@ export default function NotificationCTA({ isLoggedIn, phoneNumber, onNavigate })
               Dapatkan peringatan darurat via WhatsApp
             </p>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/75">
-              Kamu sedang melihat mode tamu. Masuk atau daftar agar nomor WhatsApp kamu terdaftar dan menerima
+              Anda sedang melihat mode tamu. Masuk atau daftar agar nomor WhatsApp Anda terdaftar dan menerima
               notifikasi otomatis saat status sistem berubah menjadi Siaga atau Warning.
             </p>
           </div>

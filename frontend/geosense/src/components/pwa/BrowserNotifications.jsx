@@ -94,7 +94,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
     setMessage(null)
     try {
       await showTestNotification()
-      setMessage({ type: "ok", text: "Notifikasi tes ditampilkan. Cek pojok perangkat kamu." })
+      setMessage({ type: "ok", text: "Notifikasi tes ditampilkan. Periksa pojok perangkat Anda." })
     } catch (error) {
       setMessage({ type: "error", text: error.message || "Gagal mengirim notifikasi tes." })
     } finally {
@@ -124,7 +124,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
       } else if (failed > 0) {
         setMessage({
           type: "error",
-          text: `Push server: terkirim ${sent}, gagal ${failed}, dihapus ${removed}. Cek log backend untuk kode error.`,
+          text: `Push server: terkirim ${sent}, gagal ${failed}, dihapus ${removed}. Periksa log backend untuk kode error.`,
         })
       } else {
         setMessage({
@@ -193,7 +193,7 @@ export default function BrowserNotifications({ isAdmin = false }) {
           <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3.5">
             <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600" aria-hidden="true" />
             <p className="text-[11px] leading-relaxed text-sky-800">
-              Di iPhone/iPad, notifikasi hanya bisa aktif setelah GeoSense dipasang ke Layar Utama
+              Di iPhone/iPad, notifikasi hanya dapat aktif setelah GeoSense dipasang ke Layar Utama
               lewat menu Bagikan di Safari.
             </p>
           </div>

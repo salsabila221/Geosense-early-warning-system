@@ -68,7 +68,7 @@ export default function EmergencyContacts() {
             Nomor Darurat
           </h2>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            Klik kartu untuk langsung menghubungi layanan darurat dari perangkat kamu.
+            Klik kartu untuk langsung menghubungi layanan darurat dari perangkat Anda.
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600">

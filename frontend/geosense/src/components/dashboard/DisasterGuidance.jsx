@@ -116,7 +116,7 @@ export default function DisasterGuidance({ status = "Aman" }) {
           rel="noreferrer"
           className="font-semibold text-primary hover:underline"
         >
-          Sumber: BNPB — Tanggap Tangkas Tangguh Menghadapi Bencana (2019), hlm. 40–44
+          Sumber: BNPB, Tanggap Tangkas Tangguh Menghadapi Bencana (2019), hlm. 40-44
         </a>
       </div>
     </section>
