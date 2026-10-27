@@ -31,7 +31,7 @@ export default function InstallPrompt() {
             <p className="text-sm font-bold text-foreground">Pasang GeoSense di perangkat</p>
             {canInstall ? (
               <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-                Akses lebih cepat dari layar utama, tampil seperti aplikasi, dan tetap bisa membuka
+                Akses lebih cepat dari layar utama, tampil seperti aplikasi, dan tetap dapat membuka
                 dashboard saat koneksi buruk.
               </p>
             ) : isIos ? (

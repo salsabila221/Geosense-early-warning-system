@@ -84,7 +84,7 @@ async function fetchPublicKey() {
     response = await apiFetch("/api/push/public-key", { auth: false })
   } catch {
     throw new Error(
-      `Tidak bisa menghubungi backend (${API_URL}). Pastikan server GeoSense menyala dan URL API benar.`
+      `Tidak dapat menghubungi backend (${API_URL}). Pastikan server GeoSense menyala dan URL API benar.`
     )
   }
 
@@ -171,7 +171,7 @@ export async function enablePushNotifications() {
       },
     })
   } catch {
-    throw new Error("Langganan dibuat, tetapi gagal dikirim ke backend. Cek koneksi API.")
+    throw new Error("Langganan dibuat, tetapi gagal dikirim ke backend. Periksa koneksi API.")
   }
 
   if (!saved.ok) {

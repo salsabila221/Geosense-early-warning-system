@@ -41,7 +41,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
   const handleSignUp = (e) => {
     e.preventDefault()
     alert(
-      'Pendaftaran manual belum tersedia. Silakan pakai tombol "Daftar dengan Google" di bawah — setelah itu kamu akan diminta melengkapi nama lengkap dan nomor WhatsApp.'
+      'Pendaftaran manual belum tersedia. Silakan gunakan tombol "Daftar dengan Google" di bawah. Setelah itu, Anda akan diminta melengkapi nama lengkap dan nomor WhatsApp.'
     )
   }
 
@@ -139,7 +139,7 @@ export default function AuthPage({ onLoginSuccess, initialTab = "login", onBackT
               Sedikit Lagi
             </CardTitle>
             <CardDescription className="text-xs text-[#3A7CA5] font-medium max-w-[320px] mx-auto leading-relaxed">
-              Akun Google <span className="font-semibold text-[#16425B]">{googleUser.email}</span> berhasil ditautkan. Isi nama lengkap dan nomor WhatsApp aktif kamu — nomor ini dipakai untuk mengirim peringatan darurat.
+              Akun Google <span className="font-semibold text-[#16425B]">{googleUser.email}</span> berhasil ditautkan. Isi nama lengkap dan nomor WhatsApp aktif Anda. Nomor ini digunakan untuk mengirim peringatan darurat.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
