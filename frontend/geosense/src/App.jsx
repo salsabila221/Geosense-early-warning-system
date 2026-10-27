@@ -13,7 +13,7 @@ import BrowserNotifications from "@/components/pwa/BrowserNotifications"
 import Footer from "@/components/layout/Footer"
 import AuthPage from "@/components/auth/AuthPage"
 import { Button } from "@/components/ui/button"
-import { API_URL, apiFetch, clearToken, getToken, setToken } from "@/lib/api"
+import { API_URL, IS_NGROK, apiFetch, clearToken, getToken, setToken } from "@/lib/api"
 import { toDisplayStatus } from "@/lib/status"
 import { computeLandslideDirection, getNodeMapData } from "@/lib/telemetry"
 
@@ -58,7 +58,14 @@ export default function App() {
   // ================= PIPELINE SOCKET.IO (LIVE DATA FROM BACKEND FASTAPI) =================
   useEffect(() => {
     // Hubungkan ke Backend FastAPI (Socket.IO di-mount di app yang sama, port 8000)
-    const socket = io(API_URL)
+    // extraHeaders diperlukan agar polling Socket.IO melewati halaman peringatan
+    // free-tier ngrok. WebSocket tetap memakai transport default.
+    const socket = io(
+      API_URL,
+      IS_NGROK
+        ? { extraHeaders: { "ngrok-skip-browser-warning": "true" } }
+        : undefined,
+    )
 
     socket.on("connect", () => {
       console.log("[GeoSense] Terhubung ke backend via Socket.IO")
@@ -669,18 +676,26 @@ export default function App() {
                   WhatsApp bisa menahan pesan (time-lock) — minta penerima kirim pesan apa saja ke nomor device sekali.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-4 text-[11px] font-semibold">
                 <span
-                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                    !waConfig?.token_configured
-                      ? "bg-red-100 text-red-700"
+                  className={`inline-flex items-center gap-1.5 ${
+                    !waConfig?.token_configured || !waConfig?.enabled
+                      ? "text-red-600"
                       : waDeviceDisconnected
-                        ? "bg-amber-100 text-amber-700"
-                        : waConfig?.enabled
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-red-100 text-red-700"
+                        ? "text-amber-600"
+                        : "text-emerald-700"
                   }`}
                 >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      !waConfig?.token_configured || !waConfig?.enabled
+                        ? "bg-red-500"
+                        : waDeviceDisconnected
+                          ? "bg-amber-500"
+                          : "bg-emerald-500"
+                    }`}
+                    aria-hidden="true"
+                  />
                   {!waConfig?.token_configured
                     ? "Nonaktif"
                     : waDeviceDisconnected
@@ -689,7 +704,8 @@ export default function App() {
                         ? "Aktif"
                         : "Nonaktif"}
                 </span>
-                <span className="inline-flex items-center rounded-lg bg-sky-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" aria-hidden="true" />
                   {waConfig?.recipients ?? 0} penerima
                 </span>
               </div>

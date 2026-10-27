@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 const NAV_ITEMS = {
   admin: [
@@ -101,11 +100,9 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
   }
 
   const roleBadge = isLoggedIn ? (
-    <Badge
-      className={`h-6 gap-1.5 px-2.5 text-[10px] font-bold uppercase tracking-wider ${
-        isAdmin
-          ? "bg-brand-dark text-white"
-          : "bg-secondary text-secondary-foreground"
+    <span
+      className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${
+        isAdmin ? "text-foreground" : "text-muted-foreground"
       }`}
     >
       {isAdmin ? (
@@ -114,15 +111,12 @@ export default function Header({ isLoggedIn, isAdmin, userName, onNavigate, onLo
         <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
       )}
       {isAdmin ? "Admin" : "User"}
-    </Badge>
+    </span>
   ) : (
-    <Badge
-      variant="outline"
-      className="h-6 gap-1.5 border-border/80 bg-muted/60 px-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
-    >
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
       <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
       Mode Tamu
-    </Badge>
+    </span>
   )
 
   return (

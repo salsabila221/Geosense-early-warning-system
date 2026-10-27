@@ -9,7 +9,6 @@ import {
   Sprout,
   TriangleAlert,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { getStatusMeta } from "@/lib/status"
 
 const STATUS_ICON = {
@@ -76,9 +75,6 @@ export default function DisasterGuidance({ status = "Aman" }) {
             Ringkasan langkah BNPB untuk menghadapi tanah longsor dan gerakan tanah.
           </p>
         </div>
-        <Badge variant="secondary" className="h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-          Sumber: BNPB
-        </Badge>
       </div>
 
       <div className="space-y-6 p-4 sm:p-6">

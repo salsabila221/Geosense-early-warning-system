@@ -8,8 +8,7 @@ import {
   Legend,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
-import { Activity, Compass, MapPin, Radio, WifiOff } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Activity, Compass, MapPin } from "lucide-react"
 import { extractNodeGps, formatCoordinate, formatDirection } from "@/lib/telemetry"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
@@ -161,10 +160,13 @@ export default function VibrationChart({
                 : " | menunggu stream processing"}
           </p>
         </div>
-        <Badge variant="secondary" className="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 text-[10px] font-semibold text-primary shadow-none">
-          <Radio className="h-3 w-3" />
+        <span className="inline-flex flex-shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${hasNodeSignals ? "bg-emerald-500" : "bg-slate-400"}`}
+            aria-hidden="true"
+          />
           {hasNodeSignals ? "3 Node Live" : "Menunggu Data"}
-        </Badge>
+        </span>
       </div>
 
       <div className="min-h-[320px] flex-1 p-3 sm:min-h-[380px] sm:p-5">
@@ -188,11 +190,7 @@ export default function VibrationChart({
             return (
               <div
                 key={nodeId}
-                className={`rounded-xl border p-3 ${
-                  online
-                    ? "border-emerald-200 bg-emerald-50/60"
-                    : "border-slate-200 bg-slate-50"
-                }`}
+                className="rounded-xl border border-border/70 bg-card p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-1.5">
@@ -200,22 +198,19 @@ export default function VibrationChart({
                       className="h-2 w-2 flex-shrink-0 rounded-full"
                       style={{ backgroundColor: NODE_META[nodeId].color }}
                     />
-                    <span className="truncate text-xs font-bold text-[#16425B]">
+                    <span className="truncate text-xs font-bold text-foreground">
                       {NODE_META[nodeId].label}
                     </span>
                   </div>
                   <span
-                    className={`inline-flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      online
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-200 text-slate-500"
+                    className={`inline-flex flex-shrink-0 items-center gap-1.5 text-[10px] font-semibold ${
+                      online ? "text-emerald-700" : "text-slate-500"
                     }`}
                   >
-                    {online ? (
-                      <Radio className="h-3 w-3" />
-                    ) : (
-                      <WifiOff className="h-3 w-3" />
-                    )}
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${online ? "bg-emerald-500" : "bg-slate-400"}`}
+                      aria-hidden="true"
+                    />
                     {online ? "Online" : "Offline"}
                   </span>
                 </div>

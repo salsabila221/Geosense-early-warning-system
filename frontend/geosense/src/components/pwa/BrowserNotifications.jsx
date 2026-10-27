@@ -9,7 +9,6 @@ import {
   Smartphone,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { apiFetch } from "@/lib/api"
 import {
@@ -167,14 +166,17 @@ export default function BrowserNotifications({ isAdmin = false }) {
           </div>
         </div>
 
-        <Badge
-          variant={subscribed ? "default" : "secondary"}
-          className={`h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider ${
-            subscribed ? "bg-emerald-600 text-white shadow-none" : "text-muted-foreground"
+        <span
+          className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${
+            subscribed ? "text-emerald-700" : "text-muted-foreground"
           }`}
         >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${subscribed ? "bg-emerald-500" : "bg-slate-400"}`}
+            aria-hidden="true"
+          />
           {subscribed ? "Aktif" : "Belum aktif"}
-        </Badge>
+        </span>
       </CardHeader>
 
       <CardContent className="space-y-4">
