@@ -8,7 +8,6 @@ import {
   Siren,
   TriangleAlert,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 const CONTACTS = [
   {
@@ -72,9 +71,10 @@ export default function EmergencyContacts() {
             Klik kartu untuk langsung menghubungi layanan darurat dari perangkat kamu.
           </p>
         </div>
-        <Badge variant="destructive" className="h-6 w-fit px-2.5 text-[10px] font-bold uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden="true" />
           Siaga 24 Jam
-        </Badge>
+        </span>
       </div>
 
       <div className="p-4 sm:p-6">
@@ -100,10 +100,10 @@ export default function EmergencyContacts() {
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
                       contact.featured
-                        ? "bg-white/15 text-white"
-                        : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                        ? "text-white/70"
+                        : "text-muted-foreground group-hover:text-primary"
                     }`}
                   >
                     <PhoneCall className="h-3 w-3" aria-hidden="true" />

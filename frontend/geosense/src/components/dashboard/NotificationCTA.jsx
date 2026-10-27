@@ -1,5 +1,4 @@
 import { ArrowRight, BellRing, CircleCheck, LockKeyhole, UserPlus } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export default function NotificationCTA({ isLoggedIn, phoneNumber, onNavigate }) {
@@ -20,10 +19,10 @@ export default function NotificationCTA({ isLoggedIn, phoneNumber, onNavigate })
               </p>
             </div>
           </div>
-          <Badge className="h-6 w-fit gap-1.5 bg-emerald-600 px-2.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-none">
-            <BellRing className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+            <CircleCheck className="h-4 w-4" aria-hidden="true" />
             Terdaftar
-          </Badge>
+          </span>
         </div>
       </section>
     )

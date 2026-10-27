@@ -1,7 +1,6 @@
 import L from "leaflet"
 import { useEffect, useMemo, useRef } from "react"
 import { Compass } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import {
@@ -96,26 +95,13 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
               : "Area jangkauan pemantauan sistem tanpa titik presisi node"}
           </p>
         </div>
-        <Badge
-          variant="secondary"
-          className={`${
-            isAdmin
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-blue-50 text-blue-700"
-          } pointer-events-none flex-shrink-0 px-2.5 text-[10px] font-semibold shadow-none sm:px-3`}
-        >
-          {isAdmin ? (
-            <>
-              <span className="sm:hidden">{onlineCount} Node</span>
-              <span className="hidden sm:inline">{onlineCount} Node Aktif</span>
-            </>
-          ) : (
-            <>
-              <span className="sm:hidden">{mapNodes.length} Area</span>
-              <span className="hidden sm:inline">{mapNodes.length} Area Terpantau</span>
-            </>
-          )}
-        </Badge>
+        <span className="pointer-events-none inline-flex flex-shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${isAdmin ? "bg-emerald-500" : "bg-sky-500"}`}
+            aria-hidden="true"
+          />
+          {isAdmin ? `${onlineCount} node aktif` : `${mapNodes.length} area terpantau`}
+        </span>
       </div>
 
       <div className="flex flex-1 flex-col p-4 sm:p-5">
