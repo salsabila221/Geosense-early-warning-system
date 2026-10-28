@@ -17,6 +17,8 @@ import { API_URL, IS_NGROK, apiFetch, clearToken, getToken, setToken } from "@/l
 import { toDisplayStatus } from "@/lib/status"
 import { computeLandslideDirection, getNodeMapData } from "@/lib/telemetry"
 
+const MAX_STREAM_SAMPLES = 3000
+
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -113,15 +115,32 @@ export default function App() {
 
         // 5. Data 3 node + hasil TDOA dari geosense-processing
         if (dataFromServer.nodes && typeof dataFromServer.nodes === "object") {
-          setNodeTelemetry(dataFromServer.nodes)
+          if (dataFromServer.stream) {
+            setNodeTelemetry((previous) => {
+              const next = { ...(previous || {}) }
+              for (const [nodeId, chunk] of Object.entries(dataFromServer.nodes)) {
+                const oldSignal = Array.isArray(previous?.[nodeId]?.signal)
+                  ? previous[nodeId].signal
+                  : []
+                const newSignal = Array.isArray(chunk?.signal) ? chunk.signal : []
+                next[nodeId] = {
+                  ...(previous?.[nodeId] || {}),
+                  ...chunk,
+                  signal: [...oldSignal, ...newSignal].slice(-MAX_STREAM_SAMPLES),
+                }
+              }
+              return next
+            })
+          } else {
+            setNodeTelemetry(dataFromServer.nodes)
+          }
 
           const incomingRate = Number(dataFromServer.sampling_rate)
           if (Number.isFinite(incomingRate) && incomingRate > 0) {
             setSamplingRate(incomingRate)
           }
 
-          // Event besar dikirim tanpa waveform lewat Socket.IO agar tidak
-          // terpotong oleh tunnel. Ambil waveform lengkap lewat HTTP.
+          // Fallback untuk payload event lama yang hanya mengirim status.
           const nodeValues = Object.values(dataFromServer.nodes)
           const hasSignal = nodeValues.some(
             (node) => Array.isArray(node?.signal) && node.signal.length > 0,
