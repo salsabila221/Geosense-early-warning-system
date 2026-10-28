@@ -86,7 +86,6 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
   )
   const hasGps = gpsPositions.length > 0
   const onlineCount = mapNodes.filter((node) => node.online).length
-  const gpsCount = mapNodes.filter((node) => node.hasGps).length
   const directionOrigin = useMemo(
     () => (isAdmin ? getEventOrigin(location, mapNodes) : center),
     [center, isAdmin, location, mapNodes],
@@ -243,52 +242,13 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
           </MapContainer>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 text-[11px] text-[#16425B]/60 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${
-                  isAdmin
-                    ? "bg-[#16425B] ring-2 ring-[#81C3D7]"
-                    : "bg-[#81C3D7]/60 ring-1 ring-[#2F6690]/50"
-                }`}
-              />
-              {isAdmin ? "Titik presisi node" : "Radius jangkauan sensor"}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              Node online
-            </span>
-            {direction && (
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />
-                Arah pergerakan
-              </span>
-            )}
-          </div>
-          <span className="font-medium">
-            {isAdmin
-              ? hasGps
-                ? `${gpsCount}/${mapNodes.length} node mengirim GPS. Koordinat presisi hanya terlihat oleh admin.`
-                : "GPS node belum tersedia, peta memakai titik fallback."
-              : "Koordinat presisi disembunyikan untuk keamanan data."}
-          </span>
-        </div>
-
-        <div className="mt-3 flex flex-col gap-1.5 rounded-xl border border-[#D9DCD6]/50 bg-slate-50/60 px-3 py-2.5 text-[11px] text-[#2F6690] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-3 flex flex-col gap-1.5 rounded-xl border border-[#D9DCD6]/50 bg-slate-50/60 px-3 py-2.5 text-[11px] text-[#2F6690] sm:flex-row sm:items-center">
           <span className="inline-flex items-center gap-1.5">
             <Compass className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
             Arah longsor:{" "}
             <strong className="text-[#16425B]">
               {direction ? formatDirection(direction) : "Menunggu hasil triangulasi 3 node"}
             </strong>
-          </span>
-          <span className="text-slate-500">
-            {direction
-              ? "Arah relatif dari titik triangulasi ML (origin geo_1)."
-              : location
-                ? "Data lokasi diterima, arah belum dapat dihitung."
-                : "Belum ada event getaran besar."}
           </span>
         </div>
       </div>

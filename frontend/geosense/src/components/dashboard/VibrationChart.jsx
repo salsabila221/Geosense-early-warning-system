@@ -25,6 +25,20 @@ function formatMetric(value, digits = 1) {
   return Number.isFinite(numeric) ? numeric.toFixed(digits) : "--"
 }
 
+function formatActivity(activity, vibration) {
+  const value = String(activity || "").trim().toUpperCase()
+  const amplitude = Number(vibration)
+  const hasSpike = Number.isFinite(amplitude) && amplitude >= 150
+  if (hasSpike) return "TERDETEKSI GETARAN"
+  if (!value || ["-", "DIEM", "AMAN", "NORMAL", "STABIL", "KONDISI STABIL"].includes(value)) {
+    return "KONDISI STABIL"
+  }
+  if (["JALAN", "LONGSOR", "EVENT", "GETARAN", "WASPADA", "BAHAYA"].includes(value)) {
+    return "TERDETEKSI GETARAN"
+  }
+  return "TERDETEKSI GETARAN"
+}
+
 function firstNumeric(node, keys) {
   for (const key of keys) {
     const numeric = Number(node?.[key])
@@ -80,6 +94,8 @@ export default function VibrationChart({
   samplingRate = 90,
 }) {
   const safeSamplingRate = Number(samplingRate) > 0 ? Number(samplingRate) : 90
+  const activityLabel = formatActivity(activity, vibration)
+  const movementDetected = activityLabel === "TERDETEKSI GETARAN"
   const signalLength = Math.max(
     0,
     ...NODE_IDS.map((nodeId) => nodes?.[nodeId]?.signal?.length || 0),
@@ -309,8 +325,10 @@ export default function VibrationChart({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="inline-flex items-center gap-1.5">
               <Activity className="h-3.5 w-3.5 flex-shrink-0" />
-              Aktivitas ML (Random Forest):{" "}
-              <strong className="text-[#16425B]">{activity || "-"}</strong>
+              Analisis Pergerakan (AI):{" "}
+              <strong className={movementDetected ? "text-amber-600" : "text-emerald-700"}>
+                {activityLabel}
+              </strong>
             </span>
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
@@ -323,20 +341,13 @@ export default function VibrationChart({
             </span>
           </div>
 
-          <div className="flex flex-col gap-1.5 rounded-lg bg-slate-50/70 px-2.5 py-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1.5 rounded-lg bg-slate-50/70 px-2.5 py-2 sm:flex-row sm:items-center">
             <span className="inline-flex items-center gap-1.5">
               <Compass className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
               Arah longsor:{" "}
               <strong className="text-[#16425B]">
                 {direction ? formatDirection(direction) : "Menunggu hasil triangulasi"}
               </strong>
-            </span>
-            <span className="text-[10px] text-slate-500">
-              {direction
-                ? direction.source === "location.x_y"
-                  ? "x = timur, y = utara; 0° = Utara"
-                  : "0° = Utara, searah jarum jam"
-                : "Butuh event getaran yang terdeteksi 3 node"}
             </span>
           </div>
         </div>
