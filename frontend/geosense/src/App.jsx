@@ -17,7 +17,7 @@ import { API_URL, IS_NGROK, apiFetch, clearToken, getToken, setToken } from "@/l
 import { toDisplayStatus } from "@/lib/status"
 import { computeLandslideDirection, getNodeMapData } from "@/lib/telemetry"
 
-const MAX_STREAM_SAMPLES = 3000
+const MAX_STREAM_SAMPLES = 5000
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false)
