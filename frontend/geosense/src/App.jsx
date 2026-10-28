@@ -119,6 +119,25 @@ export default function App() {
           if (Number.isFinite(incomingRate) && incomingRate > 0) {
             setSamplingRate(incomingRate)
           }
+
+          // Event besar dikirim tanpa waveform lewat Socket.IO agar tidak
+          // terpotong oleh tunnel. Ambil waveform lengkap lewat HTTP.
+          const nodeValues = Object.values(dataFromServer.nodes)
+          const hasSignal = nodeValues.some(
+            (node) => Array.isArray(node?.signal) && node.signal.length > 0,
+          )
+          if (nodeValues.length > 0 && !hasSignal) {
+            apiFetch("/api/telemetry/latest", { auth: false })
+              .then(({ ok, data }) => {
+                if (!ok || !data?.nodes) return
+                setNodeTelemetry(data.nodes)
+                if (data.location) setEstimatedLocation(data.location)
+                if (data.aktivitas) setMlActivity(String(data.aktivitas).toUpperCase())
+                const rate = Number(data.sampling_rate)
+                if (Number.isFinite(rate) && rate > 0) setSamplingRate(rate)
+              })
+              .catch((err) => console.error("Gagal mengambil waveform event:", err))
+          }
         }
 
         const incomingLocation = dataFromServer.location
@@ -162,6 +181,29 @@ export default function App() {
 
     return () => {
       socket.disconnect()
+    }
+  }, [])
+
+  // ================= SNAPSHOT TELEMETRI AWAL (termasuk waveform) =================
+  useEffect(() => {
+    let cancelled = false
+
+    apiFetch("/api/telemetry/latest", { auth: false })
+      .then(({ ok, data }) => {
+        if (cancelled || !ok || !data) return
+        if (data.nodes && typeof data.nodes === "object") setNodeTelemetry(data.nodes)
+        if (data.location) setEstimatedLocation(data.location)
+        if (data.aktivitas) setMlActivity(String(data.aktivitas).toUpperCase())
+        if (data.p2p_amplitude !== undefined && data.p2p_amplitude !== null) {
+          setLiveVibration(Number(data.p2p_amplitude))
+        }
+        const rate = Number(data.sampling_rate)
+        if (Number.isFinite(rate) && rate > 0) setSamplingRate(rate)
+      })
+      .catch((err) => console.error("Gagal mengambil snapshot telemetri:", err))
+
+    return () => {
+      cancelled = true
     }
   }, [])
 
