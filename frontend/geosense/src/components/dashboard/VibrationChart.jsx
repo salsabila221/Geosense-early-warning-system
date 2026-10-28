@@ -25,6 +25,51 @@ function formatMetric(value, digits = 1) {
   return Number.isFinite(numeric) ? numeric.toFixed(digits) : "--"
 }
 
+function firstNumeric(node, keys) {
+  for (const key of keys) {
+    const numeric = Number(node?.[key])
+    if (Number.isFinite(numeric) && numeric > 0) return numeric
+  }
+  return null
+}
+
+function computeStats(signal) {
+  if (!Array.isArray(signal) || signal.length === 0) return null
+  const values = signal
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+  if (values.length === 0) return null
+
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const rms = Math.sqrt(values.reduce((total, value) => total + value * value, 0) / values.length)
+  return {
+    p2p: max - min,
+    rms,
+    peak: Math.max(Math.abs(max), Math.abs(min)),
+  }
+}
+
+function getNodeStats(node) {
+  const computed = computeStats(node?.signal)
+  return {
+    p2p: firstNumeric(node, ["p2p", "p2p_amplitude", "peak_to_peak", "amplitude", "pp"]) ?? computed?.p2p ?? null,
+    rms: firstNumeric(node, ["rms", "rms_amplitude"]) ?? computed?.rms ?? null,
+    peak: firstNumeric(node, ["peak", "max", "amplitude_max"]) ?? computed?.peak ?? null,
+  }
+}
+
+function getNodeUnit(node, stats) {
+  const unit = String(node?.unit || node?.sample_unit || "").toLowerCase()
+  if (unit.includes("adc") || unit.includes("count")) return "counts"
+  if (unit.includes("mv") || unit.includes("millivolt")) return "mV"
+
+  const signalPeak = Array.isArray(node?.signal)
+    ? Math.max(0, ...node.signal.map((value) => Math.abs(Number(value) || 0)))
+    : 0
+  return (stats?.p2p || 0) > 10 || signalPeak > 10 ? "counts" : "mV"
+}
+
 export default function VibrationChart({
   chartData = [0, 0, 0, 0, 0, 0],
   vibration = 0,
@@ -186,6 +231,8 @@ export default function VibrationChart({
             const online =
               typeof node.online === "boolean" ? node.online : Object.keys(node).length > 0
             const gps = extractNodeGps(node)
+            const stats = getNodeStats(node)
+            const cardUnit = getNodeUnit(node, stats)
 
             return (
               <div
@@ -221,8 +268,8 @@ export default function VibrationChart({
                       p2p
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
-                      {formatMetric(node.p2p)}{" "}
-                      <span className="text-[9px] font-medium">{metricUnit}</span>
+                      {formatMetric(stats.p2p)}{" "}
+                      <span className="text-[9px] font-medium">{cardUnit}</span>
                     </p>
                   </div>
                   <div>
@@ -230,8 +277,8 @@ export default function VibrationChart({
                       RMS
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
-                      {formatMetric(node.rms)}{" "}
-                      <span className="text-[9px] font-medium">{metricUnit}</span>
+                      {formatMetric(stats.rms)}{" "}
+                      <span className="text-[9px] font-medium">{cardUnit}</span>
                     </p>
                   </div>
                   <div>
@@ -239,8 +286,8 @@ export default function VibrationChart({
                       peak
                     </p>
                     <p className="text-xs font-bold text-[#16425B]">
-                      {formatMetric(node.peak)}{" "}
-                      <span className="text-[9px] font-medium">{metricUnit}</span>
+                      {formatMetric(stats.peak)}{" "}
+                      <span className="text-[9px] font-medium">{cardUnit}</span>
                     </p>
                   </div>
                 </div>

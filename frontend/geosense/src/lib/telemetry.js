@@ -205,20 +205,33 @@ export function getSiteCenter(nodeData = []) {
   ]
 }
 
+// Titik event TDOA yang sudah dikonversi backend ke koordinat GPS.
+// Jangan dipakai sebagai origin panah; origin panah adalah geo_1.
+export function getEventPoint(location) {
+  if (!location || typeof location !== "object") return null
+  if (location.estimated_valid === false) return null
+
+  const latitude = parseCoordinate(
+    location.estimated_latitude ?? location.event_latitude,
+    { latitude: true },
+  )
+  const longitude = parseCoordinate(
+    location.estimated_longitude ?? location.event_longitude,
+    { latitude: false },
+  )
+  if (latitude !== null && longitude !== null) return [latitude, longitude]
+
+  const directLat = parseCoordinate(location.latitude, { latitude: true })
+  const directLon = parseCoordinate(location.longitude, { latitude: false })
+  if (directLat !== null && directLon !== null) return [directLat, directLon]
+
+  return null
+}
+
 // Titik awal panah arah longsor. Processing menghitung location.x/y relatif
 // terhadap geo_1, jadi default-kan ke GPS geo_1 (bukan centroid node).
 export function getEventOrigin(location, nodeData = []) {
   if (location && typeof location === "object") {
-    const eventLat = parseCoordinate(
-      location.estimated_latitude ?? location.event_latitude,
-      { latitude: true },
-    )
-    const eventLon = parseCoordinate(
-      location.estimated_longitude ?? location.event_longitude,
-      { latitude: false },
-    )
-    if (eventLat !== null && eventLon !== null) return [eventLat, eventLon]
-
     const origin = location.origin ?? location.reference
     if (origin && typeof origin === "object") {
       const lat = parseCoordinate(origin.latitude ?? origin.lat, { latitude: true })

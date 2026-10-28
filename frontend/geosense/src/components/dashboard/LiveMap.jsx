@@ -8,6 +8,7 @@ import {
   formatCoordinate,
   formatDirection,
   getEventOrigin,
+  getEventPoint,
   getNodeMapData,
   getSiteCenter,
 } from "@/lib/telemetry"
@@ -32,6 +33,15 @@ const createDirectionIcon = (bearing) =>
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -18],
+  })
+
+const createEventIcon = () =>
+  L.divIcon({
+    className: "",
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#DC2626;color:#fff;border:3px solid #fff;box-shadow:0 3px 14px rgba(220,38,38,0.45)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -17],
   })
 
 function MapFocus({ center, positions, positionsKey }) {
@@ -72,17 +82,16 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
   const hasGps = gpsPositions.length > 0
   const onlineCount = mapNodes.filter((node) => node.online).length
   const gpsCount = mapNodes.filter((node) => node.hasGps).length
+  const eventPoint = useMemo(() => getEventPoint(location), [location])
   const directionOrigin = useMemo(
     () => (isAdmin ? getEventOrigin(location, mapNodes) : center),
     [center, isAdmin, location, mapNodes],
   )
-  const directionEnd = useMemo(
-    () =>
-      direction && hasGps
-        ? destinationPoint(directionOrigin, direction.bearing, 1200)
-        : null,
-    [direction, directionOrigin, hasGps],
-  )
+  const directionEnd = useMemo(() => {
+    if (!direction || !hasGps) return null
+    if (eventPoint) return eventPoint
+    return destinationPoint(directionOrigin, direction.bearing, 320)
+  }, [direction, directionOrigin, eventPoint, hasGps])
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
@@ -186,6 +195,22 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
                     </Popup>
                   </Circle>
                 ))}
+
+            {eventPoint && (
+              <Marker position={eventPoint} icon={createEventIcon()}>
+                <Popup>
+                  <span className="font-bold text-[#16425B]">Estimasi lokasi TDOA</span>
+                  <br />
+                  <span className="font-mono text-xs text-[#2F6690]">
+                    {formatCoordinate(eventPoint[0])}, {formatCoordinate(eventPoint[1])}
+                  </span>
+                  <br />
+                  <span className="text-[11px] text-slate-500">
+                    Titik event dari korelasi 3 node, bukan panjang panah arah.
+                  </span>
+                </Popup>
+              </Marker>
+            )}
 
             {directionEnd && direction && (
               <>
