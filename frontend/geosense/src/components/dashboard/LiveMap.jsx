@@ -72,17 +72,21 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
     () => mapNodes.filter((node) => node.hasGps).map((node) => node.position),
     [mapNodes],
   )
+  const eventPoint = useMemo(() => getEventPoint(location), [location])
+  const focusPositions = useMemo(
+    () => (eventPoint ? [...gpsPositions, eventPoint] : gpsPositions),
+    [eventPoint, gpsPositions],
+  )
   const positionsKey = useMemo(
     () =>
-      gpsPositions
+      focusPositions
         .map(([latitude, longitude]) => `${latitude.toFixed(4)},${longitude.toFixed(4)}`)
         .join("|"),
-    [gpsPositions],
+    [focusPositions],
   )
   const hasGps = gpsPositions.length > 0
   const onlineCount = mapNodes.filter((node) => node.online).length
   const gpsCount = mapNodes.filter((node) => node.hasGps).length
-  const eventPoint = useMemo(() => getEventPoint(location), [location])
   const directionOrigin = useMemo(
     () => (isAdmin ? getEventOrigin(location, mapNodes) : center),
     [center, isAdmin, location, mapNodes],
@@ -126,7 +130,7 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            <MapFocus center={center} positions={gpsPositions} positionsKey={positionsKey} />
+            <MapFocus center={center} positions={focusPositions} positionsKey={positionsKey} />
 
             {isAdmin
               ? mapNodes.map((node, index) => (
