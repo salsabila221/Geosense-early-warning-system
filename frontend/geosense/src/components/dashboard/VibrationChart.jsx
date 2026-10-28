@@ -88,11 +88,9 @@ export default function VibrationChart({
 
   // Event waveform baru mengirim ADC counts (belum terkalibrasi), sedangkan
   // payload lama memakai mV. Jangan hardcode "mV" lagi.
-  const rawUnit = NODE_IDS.map((nodeId) => nodes?.[nodeId]?.unit).find(Boolean)
-  const unit = String(rawUnit || "mV").toLowerCase()
-  const isAdcCounts = unit.includes("adc") || unit.includes("count")
-  const metricUnit = isAdcCounts ? "counts" : "mV"
-  const unitLabel = isAdcCounts ? "ADC counts" : "mV"
+  const unitNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(Boolean)
+  const metricUnit = getNodeUnit(unitNode, getNodeStats(unitNode))
+  const unitLabel = metricUnit === "counts" ? "ADC counts" : "mV"
   const eventNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(
     (node) => node && node.event_id !== undefined && node.event_id !== null,
   )
