@@ -107,6 +107,9 @@ export default function VibrationChart({
   const unitNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(Boolean)
   const metricUnit = getNodeUnit(unitNode, getNodeStats(unitNode))
   const unitLabel = metricUnit === "counts" ? "ADC counts" : "mV"
+  const fixedY = metricUnit === "counts"
+    ? { min: -10_000_000, max: 10_000_000 }
+    : { min: -15, max: 15 }
   const eventNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(
     (node) => node && node.event_id !== undefined && node.event_id !== null,
   )
@@ -186,8 +189,17 @@ export default function VibrationChart({
       },
       y: {
         beginAtZero: false,
+        min: fixedY.min,
+        max: fixedY.max,
         grid: { color: "#EBF0F3" },
-        ticks: { color: "#3A7CA5", font: { size: 9 } },
+        ticks: {
+          color: "#3A7CA5",
+          font: { size: 9 },
+          callback: (value) =>
+            metricUnit === "counts"
+              ? `${(Number(value) / 1_000_000).toFixed(1)}M`
+              : value,
+        },
         title: {
           display: true,
           text: `Amplitudo (${unitLabel})`,
