@@ -27,6 +27,7 @@ export default function App() {
   const [userPhone, setUserPhone] = useState("")
   
   const [systemStatus, setSystemStatus] = useState("Aman")
+  const [statusSource, setStatusSource] = useState("sensor")
   const [lastUpdated, setLastUpdated] = useState("Menghubungkan ke server...")
   
   // State data grafik & getaran real-time
@@ -78,13 +79,16 @@ export default function App() {
         if (dataFromServer.status) {
           setSystemStatus(toDisplayStatus(dataFromServer.status))
         }
+        const source = dataFromServer.status_source === "admin" ? "admin" : "sensor"
+        setStatusSource(source)
 
         // 2. Format Timestamp Update
         const dateObj = dataFromServer.timestamp 
           ? new Date(dataFromServer.timestamp * 1000) 
           : new Date()
         const timeStr = dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        setLastUpdated(`Live (${dataFromServer.kondisi_tanah || 'Sensor'}) | ${timeStr} WIB`)
+        const sourceLabel = source === "admin" ? "Manual (Admin Override)" : "Live (Sensor Node)"
+        setLastUpdated(`${sourceLabel} | ${timeStr} WIB`)
 
         // 3. Update Nilai Getaran (Amplitudo Peak-to-Peak) & Streaming Chart Data
         // Pesan gpsdata hanya memperbarui peta; jangan menambah titik duplikat ke grafik.
@@ -171,12 +175,15 @@ export default function App() {
         if (cancelled || !ok) return
 
         if (data?.status) setSystemStatus(toDisplayStatus(data.status))
+        const source = data?.status_source === "admin" ? "admin" : "sensor"
+        setStatusSource(source)
 
         if (data?.last_updated) {
           const when = new Date(data.last_updated)
           if (!Number.isNaN(when.getTime())) {
             const timeStr = when.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-            setLastUpdated(`Terakhir ${timeStr} WIB`)
+            const sourceLabel = source === "admin" ? "Manual (Admin Override)" : "Live (Sensor Node)"
+            setLastUpdated(`${sourceLabel} | ${timeStr} WIB`)
           }
         }
       } catch (err) {
@@ -340,7 +347,8 @@ export default function App() {
     
     // Optimistic UI update
     setSystemStatus(status)
-    setLastUpdated(`Dipaksa Admin | ${timeString} WIB`)
+    setStatusSource("admin")
+    setLastUpdated(`Manual (Admin Override) | ${timeString} WIB`)
     
     try {
       const { ok, data } = await apiFetch(`/api/admin/override?status=${encodeURIComponent(status)}`, {
@@ -495,6 +503,8 @@ export default function App() {
                 chartData={chartData} 
                 vibration={liveVibration} 
                 activity={mlActivity} 
+                status={systemStatus}
+                statusSource={statusSource}
                 nodes={nodeTelemetry}
                 location={estimatedLocation}
                 direction={landslideDirection}

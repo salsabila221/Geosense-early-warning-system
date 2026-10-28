@@ -88,6 +88,8 @@ export default function VibrationChart({
   chartData = [0, 0, 0, 0, 0, 0],
   vibration = 0,
   activity = "-",
+  status = "Aman",
+  statusSource = "sensor",
   nodes = null,
   location = null,
   direction = null,
@@ -95,7 +97,14 @@ export default function VibrationChart({
 }) {
   const safeSamplingRate = Number(samplingRate) > 0 ? Number(samplingRate) : 90
   const activityLabel = formatActivity(activity, vibration)
-  const movementDetected = activityLabel === "TERDETEKSI GETARAN"
+  const adminOverride = statusSource === "admin"
+  const overrideStatus = String(status || "").toUpperCase()
+  const aiLabel = adminOverride
+    ? `OVERRIDE ADMIN: ${overrideStatus}`
+    : activityLabel
+  const movementDetected = adminOverride
+    ? overrideStatus !== "AMAN"
+    : activityLabel === "TERDETEKSI GETARAN"
   const signalLength = Math.max(
     0,
     ...NODE_IDS.map((nodeId) => nodes?.[nodeId]?.signal?.length || 0),
@@ -339,7 +348,7 @@ export default function VibrationChart({
               <Activity className="h-3.5 w-3.5 flex-shrink-0" />
               Analisis Pergerakan (AI):{" "}
               <strong className={movementDetected ? "text-amber-600" : "text-emerald-700"}>
-                {activityLabel}
+                {aiLabel}
               </strong>
             </span>
             <span className="inline-flex items-center gap-1.5">
