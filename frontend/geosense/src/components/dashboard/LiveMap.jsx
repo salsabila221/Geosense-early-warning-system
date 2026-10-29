@@ -1,7 +1,7 @@
 import L from "leaflet"
 import { useEffect, useMemo, useRef } from "react"
 import { Compass } from "lucide-react"
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, Polygon, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import {
   destinationPoint,
@@ -44,6 +44,15 @@ const createEventIcon = () =>
     popupAnchor: [0, -17],
   })
 
+function mapDistanceMeters(a, b) {
+  const [lat1, lon1] = a
+  const [lat2, lon2] = b
+  const meanLat = ((lat1 + lat2) / 2) * (Math.PI / 180)
+  const east = (lon2 - lon1) * 111_320 * Math.cos(meanLat)
+  const north = (lat2 - lat1) * 110_540
+  return Math.hypot(east, north)
+}
+
 function MapFocus({ center, positions, positionsKey }) {
   const map = useMap()
   const lastKey = useRef("")
@@ -56,7 +65,7 @@ function MapFocus({ center, positions, positionsKey }) {
       map.setView(positions[0], 15)
       return
     }
-    map.fitBounds(L.latLngBounds(positions), { padding: [44, 44], maxZoom: 15 })
+    map.fitBounds(L.latLngBounds(positions), { padding: [48, 48], maxZoom: 17 })
   }, [center, map, positions, positionsKey])
 
   return null
@@ -95,6 +104,17 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
     if (eventPoint) return eventPoint
     return destinationPoint(directionOrigin, direction.bearing, 320)
   }, [direction, directionOrigin, eventPoint, hasGps])
+  const movementEnd = useMemo(() => {
+    if (!eventPoint || !direction) return null
+    return destinationPoint(eventPoint, direction.bearing, 28)
+  }, [direction, eventPoint])
+  const eventRadius = useMemo(() => {
+    if (!eventPoint || gpsPositions.length < 3) return 18
+    const spans = gpsPositions.map((position) =>
+      mapDistanceMeters(position, eventPoint),
+    )
+    return Math.max(12, Math.min(30, Math.max(...spans) * 0.65))
+  }, [eventPoint, gpsPositions])
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
@@ -199,6 +219,46 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
                   </Circle>
                 ))}
 
+            {eventPoint && gpsPositions.length >= 3 && (
+              <Polygon
+                positions={gpsPositions}
+                pathOptions={{
+                  color: "#DC2626",
+                  fillColor: "#DC2626",
+                  fillOpacity: 0.06,
+                  weight: 1.5,
+                  dashArray: "5 7",
+                }}
+              />
+            )}
+
+            {eventPoint && (
+              <>
+                <Circle
+                  center={eventPoint}
+                  radius={eventRadius}
+                  pathOptions={{
+                    color: "#DC2626",
+                    fillColor: "#DC2626",
+                    fillOpacity: 0.18,
+                    weight: 2,
+                    dashArray: "7 5",
+                  }}
+                />
+                <Circle
+                  center={eventPoint}
+                  radius={eventRadius * 1.65}
+                  pathOptions={{
+                    color: "#EF4444",
+                    fillColor: "#EF4444",
+                    fillOpacity: 0.07,
+                    weight: 1.5,
+                    dashArray: "3 7",
+                  }}
+                />
+              </>
+            )}
+
             {eventPoint && (
               <Marker position={eventPoint} icon={createEventIcon()}>
                 <Popup>
@@ -209,45 +269,75 @@ export default function LiveMap({ isAdmin, nodes = null, location = null, direct
                   </span>
                   <br />
                   <span className="text-[11px] text-slate-500">
-                    Titik event dari korelasi 3 node, bukan panjang panah arah.
+                    Titik event dari korelasi 3 node, berada di dalam area segitiga.
                   </span>
                 </Popup>
               </Marker>
             )}
 
             {directionEnd && direction && (
+              <Polyline
+                positions={[directionOrigin, directionEnd]}
+                pathOptions={{
+                  color: "#DC2626",
+                  weight: 2,
+                  opacity: 0.35,
+                  dashArray: "4 8",
+                }}
+              />
+            )}
+
+            {eventPoint && movementEnd && direction && (
               <>
                 <Polyline
-                  positions={[directionOrigin, directionEnd]}
+                  positions={[eventPoint, movementEnd]}
                   pathOptions={{
                     color: "#DC2626",
-                    weight: 3,
-                    opacity: 0.8,
-                    dashArray: "8 8",
+                    weight: 3.5,
+                    opacity: 0.9,
                   }}
                 />
-                <Marker position={directionEnd} icon={createDirectionIcon(direction.bearing)}>
+                <Marker position={movementEnd} icon={createDirectionIcon(direction.bearing)}>
                   <Popup>
-                    <span className="font-bold text-[#16425B]">Perkiraan arah pergerakan</span>
+                    <span className="font-bold text-[#16425B]">Arah pergerakan getaran</span>
                     <br />
                     <span className="text-xs text-[#16425B]/70">{formatDirection(direction)}</span>
                     <br />
                     <span className="text-[11px] text-slate-500">
-                      Dihitung dari titik triangulasi ML; origin mengikuti GPS geo_1.
+                      Panah dimulai dari episentrum TDOA.
                     </span>
                   </Popup>
                 </Marker>
               </>
             )}
+
+            {!eventPoint && directionEnd && direction && (
+              <Marker position={directionEnd} icon={createDirectionIcon(direction.bearing)}>
+                <Popup>
+                  <span className="font-bold text-[#16425B]">Perkiraan arah pergerakan</span>
+                  <br />
+                  <span className="text-xs text-[#16425B]/70">{formatDirection(direction)}</span>
+                </Popup>
+              </Marker>
+            )}
           </MapContainer>
         </div>
 
-        <div className="mt-3 flex flex-col gap-1.5 rounded-xl border border-[#D9DCD6]/50 bg-slate-50/60 px-3 py-2.5 text-[11px] text-[#2F6690] sm:flex-row sm:items-center">
+        <div className="mt-3 flex flex-col gap-1.5 rounded-xl border border-[#D9DCD6]/50 bg-slate-50/60 px-3 py-2.5 text-[11px] text-[#2F6690] sm:flex-row sm:items-center sm:justify-between">
           <span className="inline-flex items-center gap-1.5">
             <Compass className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
             Arah longsor:{" "}
             <strong className="text-[#16425B]">
               {direction ? formatDirection(direction) : "Menunggu hasil triangulasi 3 node"}
+            </strong>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+            TDOA:{" "}
+            <strong className="text-[#16425B]">
+              {eventPoint && location
+                ? `X ${Number(location.x).toFixed(1)} m, Y ${Number(location.y).toFixed(1)} m`
+                : "Menunggu event 3 node"}
             </strong>
           </span>
         </div>
