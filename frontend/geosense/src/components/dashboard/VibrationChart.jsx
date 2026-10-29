@@ -20,9 +20,41 @@ const NODE_META = {
   geo_3: { label: "Geofon 3", color: "#0284c7" },
 }
 
+const DEFAULT_MV_PER_COUNT = 14 / 7_000_000
+
 function formatMetric(value, digits = 1) {
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric.toFixed(digits) : "--"
+}
+
+function isCountsNode(node) {
+  const unit = String(node?.unit || node?.sample_unit || "").toLowerCase()
+  if (unit.includes("adc") || unit.includes("count")) return true
+  if (Number(node?.adc_bits) === 24) return true
+  const peak = Array.isArray(node?.signal)
+    ? Math.max(0, ...node.signal.map((value) => Math.abs(Number(value) || 0)))
+    : 0
+  return peak > 1_000
+}
+
+function getMvPerCount(node) {
+  const explicit = Number(node?.mv_per_count ?? node?.adc_mv_per_count)
+  if (Number.isFinite(explicit) && explicit > 0) return explicit
+  const countsPerMv = Number(node?.counts_per_mv)
+  if (Number.isFinite(countsPerMv) && countsPerMv > 0) return 1 / countsPerMv
+  return DEFAULT_MV_PER_COUNT
+}
+
+// Sinyal 24-bit dikirim sebagai ADC counts; chart dan kartu statistik
+// ditampilkan dalam mV supaya sama dengan data processing/ML.
+function getNodeSignalMv(node) {
+  const signal = Array.isArray(node?.signal) ? node.signal : []
+  if (!signal.length) return []
+  const factor = isCountsNode(node) ? getMvPerCount(node) : 1
+  return signal
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .map((value) => value * factor)
 }
 
 function formatActivity(activity, vibration) {
@@ -65,7 +97,7 @@ function computeStats(signal) {
 }
 
 function getNodeStats(node) {
-  const computed = computeStats(node?.signal)
+  const computed = computeStats(getNodeSignalMv(node))
   return {
     p2p: firstNumeric(node, ["p2p", "p2p_amplitude", "peak_to_peak", "amplitude", "pp"]) ?? computed?.p2p ?? null,
     rms: firstNumeric(node, ["rms", "rms_amplitude"]) ?? computed?.rms ?? null,
@@ -73,15 +105,9 @@ function getNodeStats(node) {
   }
 }
 
-function getNodeUnit(node, stats) {
-  const unit = String(node?.unit || node?.sample_unit || "").toLowerCase()
-  if (unit.includes("adc") || unit.includes("count")) return "counts"
-  if (unit.includes("mv") || unit.includes("millivolt")) return "mV"
-
-  const signalPeak = Array.isArray(node?.signal)
-    ? Math.max(0, ...node.signal.map((value) => Math.abs(Number(value) || 0)))
-    : 0
-  return (stats?.p2p || 0) > 10 || signalPeak > 10 ? "counts" : "mV"
+function getNodeUnit() {
+  // Semua sinyal sudah dinormalisasi ke mV sebelum chart dirender.
+  return "mV"
 }
 
 export default function VibrationChart({
@@ -115,10 +141,20 @@ export default function VibrationChart({
   // payload lama memakai mV. Jangan hardcode "mV" lagi.
   const unitNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(Boolean)
   const metricUnit = getNodeUnit(unitNode, getNodeStats(unitNode))
-  const unitLabel = metricUnit === "counts" ? "ADC counts" : "mV"
-  const fixedY = metricUnit === "counts"
-    ? { min: -10_000_000, max: 10_000_000 }
-    : { min: -15, max: 15 }
+  const unitLabel = "mV"
+  const signalMaxAbs = hasNodeSignals
+    ? Math.max(
+        0,
+        ...NODE_IDS.map((nodeId) =>
+          getNodeSignalMv(nodes?.[nodeId]).reduce(
+            (peak, value) => Math.max(peak, Math.abs(value)),
+            0,
+          ),
+        ),
+      )
+    : 0
+  const yLimit = signalMaxAbs > 30 ? Math.ceil(signalMaxAbs / 50) * 50 : 15
+  const fixedY = { min: -yLimit, max: yLimit }
   const eventNode = NODE_IDS.map((nodeId) => nodes?.[nodeId]).find(
     (node) => node && node.event_id !== undefined && node.event_id !== null,
   )
@@ -135,7 +171,7 @@ export default function VibrationChart({
   const datasets = hasNodeSignals
     ? NODE_IDS.map((nodeId) => ({
         label: NODE_META[nodeId].label,
-        data: nodes?.[nodeId]?.signal || [],
+        data: getNodeSignalMv(nodes?.[nodeId]),
         borderColor: NODE_META[nodeId].color,
         backgroundColor: `${NODE_META[nodeId].color}1A`,
         borderWidth: 1.7,
@@ -204,10 +240,7 @@ export default function VibrationChart({
         ticks: {
           color: "#3A7CA5",
           font: { size: 9 },
-          callback: (value) =>
-            metricUnit === "counts"
-              ? `${(Number(value) / 1_000_000).toFixed(1)}M`
-              : value,
+          callback: (value) => value,
         },
         title: {
           display: true,
